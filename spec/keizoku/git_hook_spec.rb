@@ -19,7 +19,17 @@ module Keizoku
   end
 end
 
+
 describe Keizoku::GitHook do
+
+  let(:tag_details) { { :taggeremail => 'johndoe@example.com' } }
+  let(:repo) do
+    repo = double(Keizoku::GitRepo)
+    repo.stub(:tag_details).and_return(tag_details)
+    repo.stub(:branch_containing).and_return("ci_johndoe_workbench_sprint666")
+    repo.stub(:branch_exists?).and_return(true)
+    repo
+  end
 
   context "without a CI tag" do
     let(:io) { FakeIO.new "" }
@@ -34,13 +44,39 @@ describe Keizoku::GitHook do
       hook.validation_request.should be_nil
     end
 
+    it "provides no error messages" do
+      hook.parse
+      hook.errors.should be_empty
+    end
+
+  end
+
+  context "when the tag is not associated with a branch" do
+    let(:io) { FakeIO.new "refs/tags/ci_johndoe_no_branch_pushed" }
+    let(:hook) { Keizoku::GitHook.new(io, repo) }
+
+    before(:each) { repo.stub(:branch_containing).and_return(nil) }
+
+    it "returns false from parse" do
+      hook.parse.should eq(false)
+    end
+
+    it "provides no validation request" do
+      hook.parse
+      hook.validation_request.should be_nil
+    end
+
+    it "provides an error message" do
+      hook.parse
+      hook.errors.should be_any { |o| o.should match(%r{no branch contains.*refs/tags/ci_johndoe_no_branch_pushed}) }
+    end
   end
 
   context "when it cannot identify the intended workbench branch" do
 
     let(:io) { FakeIO.new "refs/tags/ci_johndoe_figment" }
-    let(:repo) { double(Keizoku::GitRepo, :branch_containing => "ci_johndoe_nonbench") }
     let(:hook) { Keizoku::GitHook.new(io, repo) }
+    before(:each) { repo.stub(:branch_containing).and_return("ci_johndoe_nonbench") }
 
     it "returns false from parse" do
       hook.parse.should eq(false)
@@ -61,13 +97,8 @@ describe Keizoku::GitHook do
   context "when the intended workbench branch does not exist" do
 
     let(:io) { FakeIO.new "refs/tags/ci_johndoe_tag" }
-    let(:repo) do
-      repo = double(Keizoku::GitRepo)
-      repo.stub(:branch_containing).and_return("ci_johndoe_workbench_sprint666")
-      repo.stub(:branch_exists?).and_return(false)
-      repo
-    end
     let(:hook) { Keizoku::GitHook.new(io, repo) }
+    before(:each) { repo.stub(:branch_exists?).and_return(false) }
 
     it "returns false from parse" do
       hook.parse.should eq(false)
@@ -85,27 +116,42 @@ describe Keizoku::GitHook do
 
   end
 
-=begin
   context "when the tagger's email localpart is not in the CI tag name" do
 
-    let(:io) { FakeIO.new "refs/tags/ci_workbench_sprint666" }
-    let(:hook) { Keizoku::GitHook.new(io) }
+    let(:io) { FakeIO.new "refs/tags/ci_tag" }
+    let(:repo) do
+      repo = double(Keizoku::GitRepo)
+      repo.stub(:branch_containing).and_return("ci_johndoe_workbench_sprint666")
+      repo.stub(:tag_details).and_return(:taggeremail => 'johndoe@example.com')
+      repo.stub(:branch_exists?).with("workbench_sprint666").and_return(true) # XXX unneeded
+      repo
+    end
+    let(:hook) { Keizoku::GitHook.new(io, repo) }
+
+    it "returns false from parse" do
+      hook.parse.should eq(false)
+    end
 
     it "provides no validation request" do
       hook.parse
       hook.validation_request.should be_nil
     end
 
+    it "provides an error message" do
+      hook.parse
+      hook.errors.should be_any { |o| o =~ /johndoe.*not in tag name/ }
+    end
+
   end
-=end
 
   context "when everything is awesome" do
 
     let(:io) { FakeIO.new "refs/tags/ci_johndoe_tag" }
     let(:repo) do
       repo = double(Keizoku::GitRepo)
-      repo.stub(:branch_containing).with("refs/tags/ci_johndoe_tag").and_return("ci_johndoe_workbench_sprint666")
-      repo.stub(:branch_exists?).with("workbench_sprint666").and_return(true)
+      repo.should_receive(:tag_details).with("refs/tags/ci_johndoe_tag").and_return(tag_details)
+      repo.should_receive(:branch_containing).with("refs/tags/ci_johndoe_tag").and_return("ci_johndoe_workbench_sprint666")
+      repo.should_receive(:branch_exists?).with("workbench_sprint666").and_return(true)
       repo
     end
     let(:hook) { Keizoku::GitHook.new(io, repo) }
@@ -120,6 +166,7 @@ describe Keizoku::GitHook do
     end
 
     it "provides no error messages" do
+      hook.parse
       hook.errors.should be_empty
     end
 

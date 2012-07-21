@@ -9,13 +9,13 @@ module Keizoku
     end
 
     def parse
-      unless @io.gets =~ %r{\b(refs/tags/ci_.+)}
-        return false
-      end
-
+      return false unless @io.gets =~ %r{\b(refs/tags/ci_.+)}
       @tag = $1
+
+      set_tag_details
       set_workbench_branch
-      workbench_branch_exists?
+      validate
+      @errors.empty?
     end
 
     def validation_request
@@ -25,26 +25,38 @@ module Keizoku
       @errors
     end
 
+    private
+
+    def set_tag_details
+      details = @repo.tag_details(@tag)
+      @taggeremail = details[:taggeremail]
+    end
+    
     def set_workbench_branch
-      @tag_branch = @repo.branch_containing @tag
-      if @tag_branch =~ %r{ci_.+_(workbench_.+)}
-        @workbench = $1
-      else
+      set_tag_branch
+      @tag_branch =~ %r{ci_.+_(workbench_.+)}
+      @workbench = $1
+    end
+
+    def set_tag_branch
+      @tag_branch = @repo.branch_containing(@tag)
+    end
+
+    def validate
+      if !tag_belongs_to_tagger
+        @errors << "localpart from '#{@taggeremail}' not in tag name"
+      elsif !@tag_branch
+        @errors << "no branch contains tag '#{@tag}'"
+      elsif !@workbench
         @errors << "cannot identify intended workbench branch"
-        false
+      elsif !@repo.branch_exists?(@workbench)
+        @errors << "branch '#{@workbench}' does not exist"
       end
     end
 
-    def workbench_branch_exists?
-      if !@workbench
-        @errors << "cannot identify intended workbench branch"
-        false
-      elsif !@repo.branch_exists?(@workbench)
-        @errors << "branch '#{@workbench}' does not exist"
-        false
-      else
-        true
-      end
+    def tag_belongs_to_tagger
+      localpart = @taggeremail.gsub(/@.+$/, '')
+      @tag =~ %r{refs/tags/ci_#{localpart}_}
     end
 
   end
