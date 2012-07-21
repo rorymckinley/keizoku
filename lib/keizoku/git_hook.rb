@@ -11,10 +11,8 @@ module Keizoku
     end
 
     def parse
-      if @io.gets =~ %r{\b(refs/tags/ci_.+)}
-        @tag = $1
-        handle_ci_tag
-      end
+      @io.each_line { |line| parse_ci_tag line }
+      handle_ci_tag if @tag
     end
 
     def integration_request
@@ -26,6 +24,16 @@ module Keizoku
     end
 
     private
+
+    def parse_ci_tag(line)
+      if line =~ %r{\b(refs/tags/ci_.+)}
+        if @tag
+          @errors << "multiple CI tags not supported in a single push"
+        else
+          @tag = $1
+        end
+      end
+    end
 
     def handle_ci_tag
       set_tag_details

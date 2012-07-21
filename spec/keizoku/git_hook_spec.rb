@@ -12,6 +12,9 @@ class FakeIO
     @lines.shift.chomp << "\n"
   end
 
+  def each_line
+    @lines.each { |l| yield l }
+  end
 end
 
 module Keizoku
@@ -139,7 +142,7 @@ describe Keizoku::GitHook do
 
   context "when everything is awesome" do
 
-    let(:io) { FakeIO.new "refs/tags/ci_johndoe_tag" }
+    let(:io) { FakeIO.new "refs/heads/ci_johndoe_workbench_sprint666", "refs/tags/ci_johndoe_tag" }
     let(:repo) do
       repo = double(Keizoku::GitRepo)
       repo.should_receive(:tag_details).with("refs/tags/ci_johndoe_tag").and_return(tag_details)
@@ -169,4 +172,24 @@ describe Keizoku::GitHook do
 
   end
 
+  context "when multiple CI tags are received" do
+    let(:io) { FakeIO.new(
+      "refs/heads/ci_johndoe_workbench_sprint666", "refs/tags/ci_johndoe_tag", "refs/tags/ci_johndoe_testing"
+    ) }
+    let(:hook) { Keizoku::GitHook.new(io, repo) }
+
+    it "returns false from parse" do
+      hook.parse.should be_false
+    end
+
+    it "provides no integration request" do
+      hook.parse
+      hook.integration_request.should be_nil
+    end
+
+    it "provides an error message" do
+      hook.parse
+      hook.errors.should be_any { |o| o =~ /multiple CI tags/ }
+    end
+  end
 end
