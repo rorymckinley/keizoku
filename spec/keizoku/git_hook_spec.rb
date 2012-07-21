@@ -22,7 +22,7 @@ end
 
 describe Keizoku::GitHook do
 
-  let(:tag_details) { { :taggeremail => 'johndoe@example.com' } }
+  let(:tag_details) { { :taggeremail => 'johndoe@example.com', :object => "de661a9d" } }
   let(:repo) do
     repo = double(Keizoku::GitRepo)
     repo.stub(:tag_details).and_return(tag_details)
@@ -36,12 +36,12 @@ describe Keizoku::GitHook do
     let(:hook) { Keizoku::GitHook.new(io) }
 
     it "returns false from parse" do
-      hook.parse.should eq(false)
+      hook.parse.should be_false
     end
 
-    it "provides no validation request" do
+    it "provides no integration request" do
       hook.parse
-      hook.validation_request.should be_nil
+      hook.integration_request.should be_nil
     end
 
     it "provides no error messages" do
@@ -58,12 +58,12 @@ describe Keizoku::GitHook do
     before(:each) { repo.stub(:branch_containing).and_return(nil) }
 
     it "returns false from parse" do
-      hook.parse.should eq(false)
+      hook.parse.should be_false
     end
 
-    it "provides no validation request" do
+    it "provides no integration request" do
       hook.parse
-      hook.validation_request.should be_nil
+      hook.integration_request.should be_nil
     end
 
     it "provides an error message" do
@@ -79,12 +79,12 @@ describe Keizoku::GitHook do
     before(:each) { repo.stub(:branch_containing).and_return("ci_johndoe_nonbench") }
 
     it "returns false from parse" do
-      hook.parse.should eq(false)
+      hook.parse.should be_false
     end
 
-    it "provides no validation request" do
+    it "provides no integration request" do
       hook.parse
-      hook.validation_request.should be_nil
+      hook.integration_request.should be_nil
     end
 
     it "provides an error message" do
@@ -101,12 +101,12 @@ describe Keizoku::GitHook do
     before(:each) { repo.stub(:branch_exists?).and_return(false) }
 
     it "returns false from parse" do
-      hook.parse.should eq(false)
+      hook.parse.should be_false
     end
 
-    it "provides no validation request" do
+    it "provides no integration request" do
       hook.parse
-      hook.validation_request.should be_nil
+      hook.integration_request.should be_nil
     end
 
     it "provides an error message" do
@@ -119,22 +119,15 @@ describe Keizoku::GitHook do
   context "when the tagger's email localpart is not in the CI tag name" do
 
     let(:io) { FakeIO.new "refs/tags/ci_tag" }
-    let(:repo) do
-      repo = double(Keizoku::GitRepo)
-      repo.stub(:branch_containing).and_return("ci_johndoe_workbench_sprint666")
-      repo.stub(:tag_details).and_return(:taggeremail => 'johndoe@example.com')
-      repo.stub(:branch_exists?).with("workbench_sprint666").and_return(true) # XXX unneeded
-      repo
-    end
     let(:hook) { Keizoku::GitHook.new(io, repo) }
 
     it "returns false from parse" do
-      hook.parse.should eq(false)
+      hook.parse.should be_false
     end
 
-    it "provides no validation request" do
+    it "provides no integration request" do
       hook.parse
-      hook.validation_request.should be_nil
+      hook.integration_request.should be_nil
     end
 
     it "provides an error message" do
@@ -157,12 +150,16 @@ describe Keizoku::GitHook do
     let(:hook) { Keizoku::GitHook.new(io, repo) }
 
     it "returns true from parse" do
-      hook.parse.should eq(true)
+      hook.parse.should be_true
     end
 
-    it "provides a validation request" do
-      pending "Refactoring toward new/parse/validation_request"
-      hook.validation_request.should_not be_nil
+    it "provides a integration request" do
+      hook.parse
+
+      integration_request = hook.integration_request
+      integration_request.workbench.should eq("workbench_sprint666")
+      integration_request.taggeremail.should eq("johndoe@example.com")
+      integration_request.commit.should eq("de661a9d")
     end
 
     it "provides no error messages" do
