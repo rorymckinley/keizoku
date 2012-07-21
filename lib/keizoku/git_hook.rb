@@ -1,12 +1,20 @@
 module Keizoku
-  
+
   class GitHook
 
-    def initialize(io)
+    def initialize(io, repo = nil)
+      @io = io
+      @repo = repo
     end
 
     def parse
-      false
+      unless @io.gets =~ %r{\b(refs/tags/ci_.+)}
+        return false
+      end
+
+      tag = $1
+      branch = @repo.branch_containing tag
+      branch =~ %r{ci_.+_workbench_.+} ? true : false
     end
 
     def validation_request

@@ -14,10 +14,16 @@ class FakeIO
 
 end
 
+module Keizoku
+  class GitRepo
+  end
+end
+
 describe Keizoku::GitHook do
 
   context "without a CI tag" do
-    let(:hook) { Keizoku::GitHook.new(double(IO)) }
+    let(:io) { FakeIO.new "" }
+    let(:hook) { Keizoku::GitHook.new(io) }
 
     it "returns false from parse" do
       hook.parse.should eq(false)
@@ -33,7 +39,8 @@ describe Keizoku::GitHook do
   context "when it cannot identify the intended workbench branch" do
 
     let(:io) { FakeIO.new "refs/tags/ci_johndoe_figment" }
-    let(:hook) { Keizoku::GitHook.new(io) }
+    let(:repo) { double(Keizoku::GitRepo, :branch_containing => "ci_johndoe_nonbench") }
+    let(:hook) { Keizoku::GitHook.new(io, repo) }
 
     it "returns false from parse" do
       hook.parse.should eq(false)
@@ -51,6 +58,7 @@ describe Keizoku::GitHook do
 
   end
 
+  context "when the intended workbench branch does not exist"
 =begin
   context "when the tagger's email localpart is not in the CI tag name" do
 
@@ -67,8 +75,13 @@ describe Keizoku::GitHook do
 
   context "when everything is awesome" do
 
-    let(:io) { FakeIO.new "refs/tags/ci_johndoe_workbench_sprint666" }
-    let(:hook) { Keizoku::GitHook.new(io) }
+    let(:io) { FakeIO.new "refs/tags/ci_johndoe_tag" }
+    let(:repo) do
+      repo = double(Keizoku::GitRepo)
+      repo.stub(:branch_containing).with("refs/tags/ci_johndoe_tag").and_return("ci_johndoe_workbench_sprint666")
+      repo
+    end
+    let(:hook) { Keizoku::GitHook.new(io, repo) }
 
     it "returns true from parse" do
       hook.parse.should eq(true)
