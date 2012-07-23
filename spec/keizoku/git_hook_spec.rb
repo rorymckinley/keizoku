@@ -1,12 +1,10 @@
 require 'spec_helper'
-
 require 'keizoku/git_hook'
 
 module Keizoku
   class GitRepo
   end
 end
-
 
 describe Keizoku::GitHook do
 
@@ -20,6 +18,7 @@ describe Keizoku::GitHook do
   end
 
   context "without a CI tag" do
+
     let(:io) { FakeIO.new "" }
     let(:hook) { Keizoku::GitHook.new(io) }
 
@@ -40,6 +39,7 @@ describe Keizoku::GitHook do
   end
 
   context "when the tag is not associated with a branch" do
+
     let(:io) { FakeIO.new "refs/tags/ci_johndoe_no_branch_pushed" }
     let(:hook) { Keizoku::GitHook.new(io, repo) }
 
@@ -58,6 +58,7 @@ describe Keizoku::GitHook do
       hook.parse
       hook.errors.should be_any { |o| o.should match(%r{no branch contains.*refs/tags/ci_johndoe_no_branch_pushed}) }
     end
+
   end
 
   context "when it cannot identify the intended workbench branch" do
@@ -158,6 +159,7 @@ describe Keizoku::GitHook do
   end
 
   context "when multiple CI tags are received" do
+
     let(:io) { FakeIO.new(
       "refs/heads/ci_johndoe_workbench_sprint666", "refs/tags/ci_johndoe_tag", "refs/tags/ci_johndoe_testing"
     ) }
@@ -176,5 +178,7 @@ describe Keizoku::GitHook do
       hook.parse
       hook.errors.should be_any { |o| o =~ /multiple CI tags/ }
     end
+
   end
+
 end

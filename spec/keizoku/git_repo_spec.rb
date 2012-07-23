@@ -40,6 +40,7 @@ describe Keizoku::GitRepo do
   def repo_has_object(object, branch)
       shell_interface.should_receive(:popen).with("git branch --contains #{object} 2>/dev/null").and_yield FakeIO.new("  #{branch}")
   end
+
   describe "#branch_containing(tag_refname)" do
 
     it "returns the name of the branch that contains the tag" do
@@ -47,6 +48,7 @@ describe Keizoku::GitRepo do
       repo_has_object("be659302b07a46ab6a4ac42a5859c3b8e293b431", "private_branch")
       repo.branch_containing("refs/tags/tagname").should eq("private_branch")
     end
-  end
-end
 
+  end
+
+end
