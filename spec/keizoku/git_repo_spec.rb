@@ -21,7 +21,7 @@ describe Keizoku::GitRepo do
   end
 
   def repo_has_tag(tag_refname, object, taggeremail)
-    shell_interface.should_receive(:popen).with(*%W{git for-each-ref --format="%(object)\ %(taggeremail)" #{tag_refname}})
+    shell_interface.should_receive(:popen).with("git for-each-ref --format='%(object) %(taggeremail)' #{tag_refname}")
       .and_yield FakeIO.new("#{object} <#{taggeremail}>")
   end
 

@@ -11,7 +11,7 @@ module Keizoku
     end
 
     def tag_details(tag_refname)
-      @shell_interface.popen(*%W{git for-each-ref --format="%(object)\ %(taggeremail)" #{tag_refname}}) do |io|
+      @shell_interface.popen("git for-each-ref --format='%(object) %(taggeremail)' #{tag_refname}") do |io|
         object, bracketed_email = io.gets.chomp.split
         email = bracketed_email.gsub(/[<>]/, '')
         { :object => object, :taggeremail => email }
