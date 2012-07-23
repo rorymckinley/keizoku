@@ -19,13 +19,12 @@ module Keizoku
 
   class GitRepo
 
-    def initialize(path, shell_interface = File)
-      @path = path
+    def initialize(shell_interface = File)
       @shell_interface = shell_interface
     end
 
     def branch_exists?(branch_name)
-      @shell_interface.exists?("#{@path}/refs/heads/#{branch_name}")
+      @shell_interface.exists?("refs/heads/#{branch_name}")
     end
 
     def tag_details(tag_refname)
@@ -43,18 +42,18 @@ end
 
 describe Keizoku::GitRepo do
 
-  let(:shell_interface) { double(Class) }
-  let(:repo) { Keizoku::GitRepo.new('/path/to/repo', shell_interface) }
+  let!(:shell_interface) { double(Class) }
+  let(:repo) { Keizoku::GitRepo.new(shell_interface) }
 
   describe "#branch_exists?(branch_name)" do
 
     it "returns false if the branch does not exist" do
-      shell_interface.stub(:exists?).with('/path/to/repo/refs/heads/nonexistent').and_return(false)
+      shell_interface.stub(:exists?).with('refs/heads/nonexistent').and_return(false)
       repo.branch_exists?('nonexistent').should be_false
     end
 
     it "returns true if the branch exists" do
-      shell_interface.should_receive(:exists?).with('/path/to/repo/refs/heads/existing').and_return(true)
+      shell_interface.should_receive(:exists?).with('refs/heads/existing').and_return(true)
       repo.branch_exists?('existing').should be_true
     end
 
