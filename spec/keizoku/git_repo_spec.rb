@@ -28,8 +28,8 @@ describe Keizoku::GitRepo do
   describe "#tag_details(tag_refname)" do
 
     it "returns an hash containing object and taggeremail" do
-      repo_has_tag("refs/tags/name", "be659302b07a46ab6a4ac42a5859c3b8e293b431", "sheldonh@starjuice.net")
-      repo.tag_details('refs/tags/name').should eq({
+      repo_has_tag("refs/tags/tagname", "be659302b07a46ab6a4ac42a5859c3b8e293b431", "sheldonh@starjuice.net")
+      repo.tag_details('refs/tags/tagname').should eq({
         :object => 'be659302b07a46ab6a4ac42a5859c3b8e293b431',
         :taggeremail => 'sheldonh@starjuice.net',
       })
@@ -43,9 +43,9 @@ describe Keizoku::GitRepo do
   describe "#branch_containing(tag_refname)" do
 
     it "returns the name of the branch that contains the tag" do
-      repo_has_tag("refs/tags/name", "be659302b07a46ab6a4ac42a5859c3b8e293b431", "sheldonh@starjuice.net")
+      repo_has_tag("refs/tags/tagname", "be659302b07a46ab6a4ac42a5859c3b8e293b431", "sheldonh@starjuice.net")
       repo_has_object("be659302b07a46ab6a4ac42a5859c3b8e293b431", "private_branch")
-      repo.branch_containing("refs/tags/name").should eq("private_branch")
+      repo.branch_containing("refs/tags/tagname").should eq("private_branch")
     end
   end
 end
