@@ -2,21 +2,6 @@ require 'spec_helper'
 
 require 'keizoku/git_hook'
 
-class FakeIO
-
-  def initialize(*lines)
-    @lines = lines
-  end
-
-  def gets
-    @lines.shift.chomp << "\n"
-  end
-
-  def each_line
-    @lines.each { |l| yield l }
-  end
-end
-
 module Keizoku
   class GitRepo
   end

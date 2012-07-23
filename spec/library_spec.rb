@@ -8,5 +8,7 @@ describe "keizoku library loader" do
     Keizoku::GitHook.should be_a(Class)
   end
 
+  it "loads Keizoku::GitRepo" do
+    Keizoku::GitRepo.should be_a(Class)
+  end
 end
-

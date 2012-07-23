@@ -1,44 +1,5 @@
 require 'spec_helper'
-
-class FakeIO
-
-  def initialize(*lines)
-    @lines = lines
-  end
-
-  def gets
-    @lines.shift.chomp << "\n"
-  end
-
-  def each_line
-    @lines.each { |l| yield l }
-  end
-end
-
-module Keizoku
-
-  class GitRepo
-
-    def initialize(shell_interface = File)
-      @shell_interface = shell_interface
-    end
-
-    def branch_exists?(branch_name)
-      @shell_interface.exists?("refs/heads/#{branch_name}")
-    end
-
-    def tag_details(tag_refname)
-      object = email_spec = nil
-      @shell_interface.popen(*%W{git for-each-ref --format="%(object)\ %(taggeremail)" refs/tags/name}) do |io|
-        object, email_spec = io.gets.chomp.split
-        email_spec.gsub!(/[<>]/, '')
-      end
-      { :object => object, :taggeremail => email_spec }
-    end
-
-  end
-
-end
+require 'keizoku/git_repo'
 
 describe Keizoku::GitRepo do
 
@@ -59,11 +20,15 @@ describe Keizoku::GitRepo do
 
   end
 
+  def repo_has_tag(tag_refname, object, taggeremail)
+    shell_interface.should_receive(:popen).with(*%W{git for-each-ref --format="%(object)\ %(taggeremail)" #{tag_refname}})
+      .and_yield FakeIO.new("#{object} <#{taggeremail}>")
+  end
+
   describe "#tag_details(tag_refname)" do
 
     it "returns an hash containing object and taggeremail" do
-      shell_interface.should_receive(:popen).with(*%W{git for-each-ref --format="%(object)\ %(taggeremail)" refs/tags/name}).
-        and_yield FakeIO.new("be659302b07a46ab6a4ac42a5859c3b8e293b431 <sheldonh@starjuice.net>\n")
+      repo_has_tag("refs/tags/name", "be659302b07a46ab6a4ac42a5859c3b8e293b431", "sheldonh@starjuice.net")
       repo.tag_details('refs/tags/name').should eq({
         :object => 'be659302b07a46ab6a4ac42a5859c3b8e293b431',
         :taggeremail => 'sheldonh@starjuice.net',
@@ -72,5 +37,16 @@ describe Keizoku::GitRepo do
 
   end
 
+  def repo_has_object(object, branch)
+      shell_interface.should_receive(:popen).with("git branch --contains #{object} 2>/dev/null").and_yield FakeIO.new("  #{branch}")
+  end
+  describe "#branch_containing(tag_refname)" do
+
+    it "returns the name of the branch that contains the tag" do
+      repo_has_tag("refs/tags/name", "be659302b07a46ab6a4ac42a5859c3b8e293b431", "sheldonh@starjuice.net")
+      repo_has_object("be659302b07a46ab6a4ac42a5859c3b8e293b431", "private_branch")
+      repo.branch_containing("refs/tags/name").should eq("private_branch")
+    end
+  end
 end
 
