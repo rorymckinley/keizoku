@@ -6,7 +6,7 @@ describe Keizoku::IntegrationQueuer do
 
   after(:all) { Dir.glob('/tmp/keizoku-test-*').each { |f| File.unlink(f) } }
 
-  let(:filename_generator) { ->() { "keizoku-test-" + rand(1000).to_s } }
+  let(:filename_generator) { ->(o) { "keizoku-test-" + rand(1000).to_s } }
   let(:queuer) { Keizoku::IntegrationQueuer.new("/tmp", filename_generator) }
   let(:integration_request) { { :some => :junk } }
 
@@ -25,10 +25,10 @@ describe Keizoku::IntegrationQueuer do
   end
 
   it "uses a universally unique filename" do
-    predictable_generator = ->() { "e460e540-b7f1-012f-a3e4-001b215da155" }
+    predictable_generator = ->(o) { "e460e540-b7f1-012f-a3e4-001b215da155" }
     queuer = Keizoku::IntegrationQueuer.new("/tmp", predictable_generator)
     queuer.enqueue(integration_request)
-    queuer.request_path.basename.should eq Pathname.new(predictable_generator.call)
+    queuer.request_path.basename.should eq Pathname.new(predictable_generator.call(nil))
   end
 
   it "writes the request into a file in the queue directory" do
