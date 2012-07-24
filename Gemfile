@@ -1,5 +1,7 @@
 source "http://rubygems.org"
 
+gem 'uuid', '~> 2.3.5'
+
 group :development do
   gem "rspec", "~> 2.11.0"
   gem "rdoc", "~> 3.12"
