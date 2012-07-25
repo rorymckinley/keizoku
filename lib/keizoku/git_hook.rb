@@ -84,11 +84,11 @@ module Keizoku
     end
 
     def build_integration_request
-      @integration_request = OpenStruct.new({
+      @integration_request = {
         :workbench => @workbench,
         :taggeremail => @taggeremail,
         :commit => @commit,
-      })
+      }
     end
 
   end

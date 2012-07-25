@@ -146,9 +146,9 @@ describe Keizoku::GitHook do
       hook.parse
 
       integration_request = hook.integration_request
-      integration_request.workbench.should eq("workbench_sprint666")
-      integration_request.taggeremail.should eq("johndoe@example.com")
-      integration_request.commit.should eq("de661a9d")
+      integration_request[:workbench].should eq("workbench_sprint666")
+      integration_request[:taggeremail].should eq("johndoe@example.com")
+      integration_request[:commit].should eq("de661a9d")
     end
 
     it "provides no error messages" do

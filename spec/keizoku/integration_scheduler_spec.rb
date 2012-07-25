@@ -34,6 +34,10 @@ module Keizoku
       @requests.first
     end
 
+    def next_integration_request
+      @requests.reverse.detect { |request| request[:taggeremail] == oldest_request[:taggeremail] }
+    end
+
     private
 
     def load_request(child)
@@ -62,7 +66,7 @@ describe Keizoku::IntegrationScheduler do
 
   let(:generator) { ->(o) { "keizoku-test-#{rand(1000)}" } }
   let(:queuer) { Keizoku::IntegrationQueuer.new("/tmp", generator) }
-  let(:integration_request) { {:some => :junk} }
+  let(:integration_request) { {:some => :junk, :taggeremail => "sue@trial.co.za"} }
   let(:scheduler) { Keizoku::IntegrationScheduler.new("/tmp", ->(o) { o =~ /keizoku-test-.+$/ }) }
 
   def enqueue(quantity = 1, request = integration_request, clock = ->() { DateTime.now })
@@ -85,12 +89,21 @@ describe Keizoku::IntegrationScheduler do
     scheduler.requests.first.should be_integration_request integration_request
   end
 
-  it "identifies the oldest request" do
-    enqueue(1, integration_request)
-    enqueue(1, integration_request, ->() { DateTime.new(1974,10,18,06,40,00) })
-    enqueue(1, integration_request)
-    scheduler.read_queue
-    scheduler.oldest_request[:queued_at].should eq DateTime.new(1974,10,18,06,40,00)
+  context "finding the request to integrate" do
+    before(:each) do
+      enqueue(1, integration_request, ->() { DateTime.new(1984,10,18,06,40,00) })
+      enqueue(1, integration_request, ->() { DateTime.new(1974,10,18,06,40,00) })
+      enqueue(1, integration_request.merge( :taggeremail => "bob@trial.co.za"))
+      scheduler.read_queue
+    end
+
+    it "identifies the oldest request" do
+      scheduler.oldest_request[:queued_at].should eq DateTime.new(1974,10,18,06,40,00)
+    end
+
+    it "identifies the next request for the tagger with the oldest request" do
+      scheduler.next_integration_request[:queued_at].should eq DateTime.new(1984,10,18,06,40,00)
+    end
   end
 
 end
