@@ -26,10 +26,10 @@ describe Keizoku::IntegrationQueuer do
   end
 
   it "uses a universally unique filename" do
-    predictable_generator = ->(o) { "e460e540-b7f1-012f-a3e4-001b215da155" }
-    queuer = Keizoku::IntegrationQueuer.new("/tmp", predictable_generator)
+    UUID.stub(:generate).and_return ('keizoku-test-uuid')
+    queuer = Keizoku::IntegrationQueuer.new("/tmp")
     queuer.enqueue(integration_request)
-    queuer.request_path.basename.should eq Pathname.new(predictable_generator.call(nil))
+    queuer.request_path.basename.should eq Pathname.new('keizoku-test-uuid')
   end
 
   it "writes the request into a file in the queue directory" do
