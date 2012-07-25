@@ -1,7 +1,15 @@
 require 'spec_helper'
+require 'date'
 
 require 'keizoku/integration_queuer'
 require 'ostruct'
+
+RSpec::Matchers.define :be_integration_request do |expected|
+  match do |actual|
+    actual = actual.dup.tap { |o| o.delete(:queued_at) }
+    actual == expected
+  end
+end
 
 module Keizoku
 
@@ -29,11 +37,11 @@ module Keizoku
     private
 
     def load_request(child)
-      @requests << OpenStruct.new(attributes: Marshal.load(child.read), timestamp: child.mtime)
+      @requests << Marshal.load(child.read)
     end
 
     def sort_requests_by_ascending_timestamp
-      @requests.sort! { |a, b| a.mtime <=> b.mtime }
+      @requests.sort! { |a, b| a[:queued_at] <=> b[:queued_at] }
     end
 
   end
@@ -52,13 +60,13 @@ describe Keizoku::IntegrationScheduler do
     clean_up_queue
   end
 
-  let(:filter) { ->(o) { "keizoku-test-#{rand(1000)}" } }
-  let(:queuer) { Keizoku::IntegrationQueuer.new("/tmp", filter) }
+  let(:generator) { ->(o) { "keizoku-test-#{rand(1000)}" } }
+  let(:queuer) { Keizoku::IntegrationQueuer.new("/tmp", generator) }
   let(:integration_request) { {:some => :junk} }
   let(:scheduler) { Keizoku::IntegrationScheduler.new("/tmp", ->(o) { o =~ /keizoku-test-.+$/ }) }
 
-  def enqueue(quantity = 1, request = integration_request)
-    quantity.times { queuer.enqueue(request) }
+  def enqueue(quantity = 1, request = integration_request, clock = ->() { DateTime.now })
+    quantity.times { queuer.enqueue(request, clock) }
   end
 
   it "is initialised with the path to the queue" do
@@ -74,16 +82,15 @@ describe Keizoku::IntegrationScheduler do
   it "deserializes integration requests" do
     enqueue
     scheduler.read_queue
-    scheduler.requests.first.attributes.should eq integration_request
+    scheduler.requests.first.should be_integration_request integration_request
   end
 
   it "identifies the oldest request" do
-    filter = ->(o) { "keizoku-test-#{o[:file_prefix]}#{rand(1000)}" }
-    enqueue(1, :file_prefix => 'C')
-    enqueue(1, :file_prefix => 'B')
-    enqueue(1, :file_prefix => 'D')
+    enqueue(1, integration_request)
+    enqueue(1, integration_request, ->() { DateTime.new(1974,10,18,06,40,00) })
+    enqueue(1, integration_request)
     scheduler.read_queue
-    scheduler.oldest_request.attributes.should eq(:file_prefix => 'C')
+    scheduler.oldest_request[:queued_at].should eq DateTime.new(1974,10,18,06,40,00)
   end
 
 end

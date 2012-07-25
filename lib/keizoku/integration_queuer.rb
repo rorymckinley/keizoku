@@ -1,3 +1,4 @@
+require 'date'
 require 'pathname'
 require 'uuid'
 
@@ -11,10 +12,14 @@ module Keizoku
       @filename_generator = filename_generator
     end
 
-    def enqueue(request)
-      @request = request
+    def enqueue(request, clock = ->() { DateTime.now })
+      @request = request.merge(:queued_at => clock.call)
       set_unique_request_path
       write_request
+    end
+
+    def last_enqueued_request
+      @request
     end
 
     private
@@ -24,7 +29,7 @@ module Keizoku
     end
 
     def write_request
-      @request_path.open('w') { |io| io.write serialized_request }
+      @request_path.open('wb') { |io| io.write serialized_request }
     end
 
     def serialized_request

@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'date'
 
 require 'keizoku/integration_queuer'
 
@@ -38,6 +39,13 @@ describe Keizoku::IntegrationQueuer do
 
   it "writes the contents of the request into the file" do
     queuer.enqueue(integration_request)
-    queuer.request_path.read.should eq Marshal.dump(integration_request)
+    queuer.request_path.binread.should eq Marshal.dump(queuer.last_enqueued_request)
   end
+
+  it "includes time of receipt (to nanosecond resolution) in the request" do
+    very_specific_time = DateTime.new(2012,07,25,20,51,0.0042)
+    queuer.enqueue(integration_request, ->() { very_specific_time })
+    queuer.last_enqueued_request[:queued_at].should eq very_specific_time
+  end
+
 end
