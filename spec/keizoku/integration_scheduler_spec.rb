@@ -11,6 +11,15 @@ RSpec::Matchers.define :be_integration_request do |expected|
   end
 end
 
+RSpec::Matchers.define :have_integration_requests_for_dates do |*dates|
+  match do |scheduler|
+    scheduler.requests.should have(dates.size).elements
+    dates.each do |date|
+      scheduler.requests.should be_any { |r| r[:queued_at] == date }
+    end
+  end
+end
+
 describe Keizoku::IntegrationScheduler do
 
   def clean_up_queue
@@ -48,17 +57,13 @@ describe Keizoku::IntegrationScheduler do
     scheduler.requests.first.should be_integration_request integration_request
   end
 
-  context "finding the request to integrate" do
+  context "integration request lifecycle" do
     before(:each) do
       enqueue(1, integration_request.merge( :workbench => "workbench_other" ), ->() { DateTime.new(1994) })
       enqueue(1, integration_request, ->() { DateTime.new(1984) })
       enqueue(1, integration_request, ->() { DateTime.new(1974) })
-      enqueue(1, integration_request.merge( :taggeremail => "someoneelsemaybe@trial.co.za"))
+      enqueue(1, integration_request.merge( :taggeremail => "someoneelsemaybe@trial.co.za"), ->() { DateTime.new(2004) })
       scheduler.read_queue
-    end
-
-    it "identifies the oldest request" do
-      scheduler.oldest_request[:queued_at].should eq DateTime.new(1974)
     end
 
     it "identifies the next request for the tagger with the oldest request" do
@@ -70,9 +75,16 @@ describe Keizoku::IntegrationScheduler do
       scheduler.next_integration_request(filter)[:queued_at].should eq DateTime.new(1994)
     end
 
-    it "deletes all the tagger's requests for the selected workbench" do
-      pending "not here yet"
+    it "completes and deletes an integration request and its predecessors" do
+      request = scheduler.next_integration_request
+      scheduler.complete_integration_request(request)
+      scheduler.should have_integration_requests_for_dates DateTime.new(1994), DateTime.new(2004)
+
+      scheduler = Keizoku::IntegrationScheduler.new("/tmp", ->(o) { o =~ /keizoku-test-.+$/ })
+      scheduler.read_queue
+      scheduler.should have_integration_requests_for_dates DateTime.new(1994), DateTime.new(2004)
     end
+
   end
 
 end
