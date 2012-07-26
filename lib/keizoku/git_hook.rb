@@ -88,6 +88,7 @@ module Keizoku
         :workbench => @workbench,
         :taggeremail => @taggeremail,
         :commit => @commit,
+        :tag => @tag
       }
     end
 

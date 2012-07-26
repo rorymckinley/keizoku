@@ -149,6 +149,7 @@ describe Keizoku::GitHook do
       integration_request[:workbench].should eq("workbench_sprint666")
       integration_request[:taggeremail].should eq("johndoe@example.com")
       integration_request[:commit].should eq("de661a9d")
+      integration_request[:tag].should eq("refs/tags/ci_johndoe_tag")
     end
 
     it "provides no error messages" do
