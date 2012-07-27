@@ -4,7 +4,7 @@ require 'keizoku/integration'
 
 module Keizoku
   class IntegrationDispatcher
-    def initialize(scheduler, integration_factory, notifier)
+    def initialize(scheduler, integration_factory, notifier = nil)
       @scheduler = scheduler
       @integration_factory = integration_factory
       @notifier = notifier
@@ -12,49 +12,60 @@ module Keizoku
 
     def run
       @scheduler.read_queue
-      request = @scheduler.next_integration_request
-      integration = @integration_factory.build(request)
-      integration.integrate
-      @notifier.notify(integration)
+      while request = @scheduler.next_integration_request
+        integration = @integration_factory.build(request)
+        integration.integrate
+        @scheduler.complete_integration_request(request)
+        @notifier.notify(integration) if @notifier
+      end
     end
   end
 end
 
+class FakeScheduler
+  attr_accessor :requests
+
+  def initialize(requests)
+    @queued_requests = requests.dup
+  end
+
+  def read_queue
+    @requests = @queued_requests.dup
+    @queued_requests.clear
+  end
+
+  def next_integration_request
+    @requests.first
+  end
+
+  def complete_integration_request(request)
+    @requests.delete(request)
+  end
+end
+
 describe Keizoku::IntegrationDispatcher do
-  let(:request) { {:some => :junk} }
-  let(:scheduler) do
-    double(Keizoku::IntegrationScheduler, :next_integration_request => request).as_null_object
-  end
-  let(:notifier) { double(:FakeNotifier).as_null_object }
-  let(:dispatcher) do
-    Keizoku::IntegrationDispatcher.new(scheduler, Keizoku::Integration, notifier)
-  end
+  it "kicks off integrations until the scheduler is empty" do
+    request1 = {:some => :junk}
+    request2 = {:other => :stuff}
+    scheduler = FakeScheduler.new([request1, request2])
+    dispatcher = Keizoku::IntegrationDispatcher.new(scheduler, integrator = double)
 
-  it "tells the scheduler to read the queue" do
-    scheduler.should_receive(:read_queue)
-    dispatcher.run
-  end
-
-  it "kicks off the next integration request" do
-    integration = double(Keizoku::Integration).as_null_object
-    integration.should_receive(:integrate)
-    Keizoku::Integration.stub(:build).with(request).and_return(integration)
+    integrator.should_receive(:build).with(request1).and_return(integration1 = double)
+    integrator.should_receive(:build).with(request2).and_return(integration2 = double)
+    integration1.should_receive(:integrate)
+    integration2.should_receive(:integrate)
 
     dispatcher.run
+
+    scheduler.requests.should be_empty
   end
 
   it "triggers notification of each integration outcome" do
-    integration = double(Keizoku::Integration).as_null_object
-    Keizoku::Integration.stub(:build).and_return(integration)
-    notifier.should_receive(:notify).with(integration)
+    scheduler = FakeScheduler.new([{:some => :junk}])
+    dispatcher = Keizoku::IntegrationDispatcher.new(scheduler, Keizoku::Integration, notifier = double)
+    notifier.stub(:notify).with(an_instance_of(Keizoku::Integration))
 
     dispatcher.run
   end
 
-  it "makes repeated calls to the scheduler until there are no remaining integration requests" do
-    scheduler = double(Keizoku::IntegrationScheduler).as_null_object
-    scheduler.should_receive(:next_integration_request).and_return(request, nil)
-
-    dispatcher.run
-  end
 end
