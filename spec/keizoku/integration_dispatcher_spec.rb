@@ -50,4 +50,11 @@ describe Keizoku::IntegrationDispatcher do
 
     dispatcher.run
   end
+
+  it "makes repeated calls to the scheduler until there are no remaining integration requests" do
+    scheduler = double(Keizoku::IntegrationScheduler).as_null_object
+    scheduler.should_receive(:next_integration_request).and_return(request, nil)
+
+    dispatcher.run
+  end
 end

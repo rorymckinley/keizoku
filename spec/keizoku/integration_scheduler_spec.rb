@@ -87,4 +87,15 @@ describe Keizoku::IntegrationScheduler do
 
   end
 
+  context "when the queue empties" do
+    it "#next_integration_request returns nil if the queue is empty" do
+      enqueue
+      scheduler.read_queue
+      request = scheduler.next_integration_request
+      scheduler.complete_integration_request(request)
+
+      scheduler.next_integration_request.should be_nil
+    end
+  end
+
 end
