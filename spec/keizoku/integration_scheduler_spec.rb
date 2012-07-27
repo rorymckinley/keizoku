@@ -66,16 +66,16 @@ describe Keizoku::IntegrationScheduler do
       scheduler.read_queue
     end
 
-    it "identifies the next request for the tagger with the oldest request" do
+    it "#next_integration_request returns the head of the earliest request timeline" do
       scheduler.next_integration_request[:queued_at].should eq DateTime.new(1984)
     end
 
-    it "filters the next integration request if given a filter" do
+    it "#next_integration_request excludes request timelines matching an optional filter" do
       filter = ->(r) { r[:workbench] != "workbench_sprint666" }
       scheduler.next_integration_request(filter)[:queued_at].should eq DateTime.new(1994)
     end
 
-    it "completes and deletes an integration request and its predecessors" do
+    it "#complete_integration_request deletes the request and its predecessors on the timeline" do
       request = scheduler.next_integration_request
       scheduler.complete_integration_request(request)
       scheduler.should have_integration_requests_for_dates DateTime.new(1994), DateTime.new(2004)
