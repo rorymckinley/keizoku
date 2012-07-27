@@ -1,2 +1,3 @@
-require 'keizoku/git_hook'
-require 'keizoku/git_repo'
+Dir.glob(File.join("keizoku", "**", "*.rb")).each do |f|
+  require f
+end
