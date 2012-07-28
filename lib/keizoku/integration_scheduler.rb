@@ -4,16 +4,16 @@ module Keizoku
 
     attr_reader :requests
 
-    def initialize(queue_path, request_filter)
+    def initialize(queue_path, basename_filter)
       @queue_path = Pathname.new(queue_path)
-      @request_filter = request_filter
+      @basename_filter = basename_filter
     end
 
     def read_queue
       @requests = []
       @request_paths = {}
       @queue_path.each_child do |child|
-        load_request(child) if @request_filter.call(child.basename.to_s)
+        load_request(child) if @basename_filter.call(child.basename.to_s)
       end
       sort_requests_by_ascending_timestamp
     end
