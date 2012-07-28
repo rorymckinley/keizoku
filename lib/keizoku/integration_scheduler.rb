@@ -7,11 +7,11 @@ module Keizoku
     def initialize(queue_path, basename_filter)
       @queue_path = Pathname.new(queue_path)
       @basename_filter = basename_filter
+      empty_requests_and_paths
     end
 
     def read_queue
-      @requests = []
-      @request_paths = {}
+      empty_requests_and_paths
       @queue_path.each_child do |child|
         load_request(child) if @basename_filter.call(child.basename.to_s)
       end
@@ -35,7 +35,16 @@ module Keizoku
       end
     end
 
+    def empty?
+      @requests.empty?
+    end
+
     private
+
+    def empty_requests_and_paths
+      @requests = []
+      @request_paths = {}
+    end
 
     def sort_requests_by_ascending_timestamp
       @requests.sort! { |a, b| a[:queued_at] <=> b[:queued_at] }
