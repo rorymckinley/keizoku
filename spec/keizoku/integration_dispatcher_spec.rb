@@ -1,71 +1,73 @@
 require 'spec_helper'
-require 'keizoku/integration_scheduler'
-require 'keizoku/integration'
 
 module Keizoku
   class IntegrationDispatcher
-    def initialize(scheduler, integration_factory, notifier = nil)
-      @scheduler = scheduler
-      @integration_factory = integration_factory
-      @notifier = notifier
+
+    def initialize(pool_size)
+      @requests = []
     end
 
-    def run
-      @scheduler.read_queue
-      while request = @scheduler.next_integration_request
-        integration = @integration_factory.build(request)
-        integration.integrate
-        @scheduler.complete_integration_request(request)
-        @notifier.notify(integration) if @notifier
-      end
+    def start_integrating(request)
+      @requests << request
     end
-  end
-end
 
-class FakeScheduler
-  attr_accessor :requests
+    def busy_with?(request)
+      @requests.include?(request)
+    end
 
-  def initialize(requests)
-    @queued_requests = requests.dup
-  end
-
-  def read_queue
-    @requests = @queued_requests.dup
-    @queued_requests.clear
-  end
-
-  def next_integration_request
-    @requests.first
-  end
-
-  def complete_integration_request(request)
-    @requests.delete(request)
   end
 end
 
 describe Keizoku::IntegrationDispatcher do
-  it "kicks off integrations until the scheduler is empty" do
-    request1 = {:some => :junk}
-    request2 = {:other => :stuff}
-    scheduler = FakeScheduler.new([request1, request2])
-    dispatcher = Keizoku::IntegrationDispatcher.new(scheduler, integrator = double)
 
-    integrator.should_receive(:build).with(request1).and_return(integration1 = double)
-    integrator.should_receive(:build).with(request2).and_return(integration2 = double)
-    integration1.should_receive(:integrate)
-    integration2.should_receive(:integrate)
+  describe "#new(pool_size)" do
 
-    dispatcher.run
+    it "it takes a pool size" do
+      expect { Keizoku::IntegrationDispatcher.new(1) }.to_not raise_error
+    end
 
-    scheduler.requests.should be_empty
   end
 
-  it "triggers notification of each integration outcome" do
-    scheduler = FakeScheduler.new([{:some => :junk}])
-    dispatcher = Keizoku::IntegrationDispatcher.new(scheduler, Keizoku::Integration, notifier = double)
-    notifier.stub(:notify).with(an_instance_of(Keizoku::Integration))
+  describe "#start_integrating(request)" do
 
-    dispatcher.run
+    it "adds an integration for the request to the pool" do
+      dispatcher = Keizoku::IntegrationDispatcher.new(1)
+      dispatcher.start_integrating({:workbench => 'workbench_sprint66'})
+      dispatcher.should be_busy_with({:workbench => 'workbench_sprint66'})
+    end
+
+  end
+
+  def pidlog(message)
+    $stderr.puts "[#{Process.pid}] #{message}"
+  end
+
+  class FakeIntegration
+
+    def initialize(io)
+      @io = io
+    end
+    def integrate(request)
+      @io.gets
+      pidlog "Got it, boss, we're outta here"
+    end
+    def pidlog(message)
+      $stderr.puts "[#{Process.pid}] #{message}"
+    end
+  end
+
+  describe "fake integration" do
+    it "works" do
+      r, w = IO.pipe
+      i = FakeIntegration.new(r)
+      Process.fork { i.integrate(nil); pidlog "leaving fork" }
+      sleep 0.1
+      Process.wait(-1, Process::WNOHANG).should be_nil
+      w.puts
+      w.flush
+      sleep 0.1
+      Process.wait(-1, Process::WNOHANG).should_not be_nil
+    end
   end
 
 end
