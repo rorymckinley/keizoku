@@ -1,5 +1,3 @@
-require 'io/wait'
-
 class FakeIntegration
 
   def self.build(request)

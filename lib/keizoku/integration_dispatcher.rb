@@ -9,21 +9,22 @@ module Keizoku
 
     def start_integrating(request)
       integration = @integration_factory.call(request)
-      thread = Thread.fork { integration.integrate }
-      @integrations_in_progress[thread] = integration
+      @integrations_in_progress[integration] = Thread.fork { integration.integrate }
     end
 
-    def completed_integrations
-      completed_integrations = []
-      @integrations_in_progress.each do |thread, integration|
-        if integration.completed?
-          completed_integrations << integration
-          thread.join
-          @integrations_in_progress.delete(thread)
-        end
+    def harvest_completed_integrations
+      @completed_integrations = []
+      @integrations_in_progress.each_key do |integration|
+        reap_integration(integration) if integration.completed?
       end
-      completed_integrations
+      @completed_integrations
     end
+
+    def reap_integration(integration)
+      @completed_integrations << integration
+      @integrations_in_progress.delete(integration).join
+    end
+    private :reap_integration
 
     def empty?
       @integrations_in_progress.empty?
@@ -39,7 +40,7 @@ module Keizoku
 
     private
     def busy_with?(request)
-      @integrations_in_progress.detect { |pid, integration| integration.request == request }
+      @integrations_in_progress.detect { |integration, thread| integration.request == request }
     end
 
   end
