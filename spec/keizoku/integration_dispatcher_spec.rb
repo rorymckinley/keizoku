@@ -89,7 +89,13 @@ describe Keizoku::IntegrationDispatcher do
       @dispatcher.should be_empty
     end
 
-    it "is true after all integrations are completed"
+    it "is true after all integrations are completed" do
+      @dispatcher = Keizoku::IntegrationDispatcher.new(1)
+      @dispatcher.start_integrating(request)
+      sleep 0.02
+      @dispatcher.completed_integrations
+      @dispatcher.should be_empty
+    end
 
   end
 
