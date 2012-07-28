@@ -8,24 +8,29 @@ RSpec::Matchers.define :be_busy_with do |request|
   end
 end
 
+require 'keizoku/integration'
+
 module Keizoku
   class IntegrationDispatcher
 
-    def initialize(pool_size)
+    def initialize(pool_size, integration_factory = ->(r) { Keizoku::Integration.build(r) })
+      @integration_factory = integration_factory
       @pool_size = pool_size
-      @requests = []
+      @integrations_in_progress = []
     end
 
     def start_integrating(request)
-      @requests << request
+      integration = @integration_factory.call(request)
+      @integrations_in_progress << integration
+      integration.integrate
     end
 
     def empty?
-      @requests.empty?
+      @integrations_in_progress.empty?
     end
 
     def full?
-      @pool_size <= @requests.size
+      @pool_size <= @integrations_in_progress.size
     end
 
     def busy_filter
@@ -34,7 +39,7 @@ module Keizoku
 
     private
     def busy_with?(request)
-      @requests.include?(request)
+      @integrations_in_progress.detect { |integration| integration.request == request }
     end
 
   end
@@ -51,13 +56,26 @@ describe Keizoku::IntegrationDispatcher do
   end
 
   describe "#start_integrating(request)" do
+    let(:request) { {:workbench => 'workbench_sprint66'} }
 
     it "adds an integration for the request to the pool" do
       dispatcher = Keizoku::IntegrationDispatcher.new(1)
-      dispatcher.start_integrating({:workbench => 'workbench_sprint66'})
-      dispatcher.should be_busy_with(:workbench => 'workbench_sprint66')
+      dispatcher.start_integrating(request)
+      dispatcher.should be_busy_with(request)
     end
 
+    it "builds an integration for the request" do
+      Keizoku::Integration.should_receive(:build).with(request).and_return(double.as_null_object)
+      dispatcher = Keizoku::IntegrationDispatcher.new(1, ->(r) { Keizoku::Integration.build(r) })
+      dispatcher.start_integrating(request)
+    end
+
+    it "integrates the integration for the request" do
+      Keizoku::Integration.should_receive(:build).and_return(integration = double("integration"))
+      integration.should_receive(:integrate)
+      dispatcher = Keizoku::IntegrationDispatcher.new(1, ->(r) { Keizoku::Integration.build(r) })
+      dispatcher.start_integrating(request)
+    end
   end
 
   describe "#empty?" do
