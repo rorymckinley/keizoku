@@ -12,6 +12,11 @@ module Keizoku
     private :initialize
 
     def integrate
+      @completed = true
+    end
+
+    def completed?
+      @completed
     end
   end
 end

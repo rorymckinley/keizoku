@@ -9,6 +9,11 @@ RSpec::Matchers.define :be_busy_with do |request|
   end
 end
 
+# To accommodate a small delay when working with threads
+def tempus_fugit
+  sleep 0.001
+end
+
 describe Keizoku::IntegrationDispatcher do
 
   after(:each) do
@@ -43,6 +48,7 @@ describe Keizoku::IntegrationDispatcher do
       integration = FakeIntegration.build(request)
       @dispatcher = Keizoku::IntegrationDispatcher.new(1, ->(r) { integration })
       @dispatcher.start_integrating(request)
+      tempus_fugit
       integration.complete
       integration.should have_been_asked_to_integrate
     end
@@ -92,7 +98,7 @@ describe Keizoku::IntegrationDispatcher do
     it "is true after all integrations are completed" do
       @dispatcher = Keizoku::IntegrationDispatcher.new(1)
       @dispatcher.start_integrating(request)
-      sleep 0.02
+      tempus_fugit
       @dispatcher.completed_integrations
       @dispatcher.should be_empty
     end

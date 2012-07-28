@@ -17,4 +17,19 @@ describe Keizoku::Integration do
       expect { integration.integrate }.to_not raise_error
     end
   end
+
+  describe "#completed?" do
+    it "is false if not completed" do
+      request = {:some => :junk}
+      integration = Keizoku::Integration.build(request)
+      integration.should_not be_completed
+    end
+
+    it "is true if completed (regardless of integration outcome)" do
+      request = {:some => :junk}
+      integration = Keizoku::Integration.build(request)
+      integration.integrate
+      integration.should be_completed
+    end
+  end
 end

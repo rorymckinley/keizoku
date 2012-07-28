@@ -9,14 +9,18 @@ module Keizoku
 
     def start_integrating(request)
       integration = @integration_factory.call(request)
-      pid = Process.fork { integration.integrate }
-      @integrations_in_progress[pid] = integration
+      thread = Thread.fork { integration.integrate }
+      @integrations_in_progress[thread] = integration
     end
 
     def completed_integrations
       completed_integrations = []
-      while !empty? and pid = Process.wait(-1, Process::WNOHANG)
-        completed_integrations << @integrations_in_progress.delete(pid)
+      @integrations_in_progress.each do |thread, integration|
+        if integration.completed?
+          completed_integrations << integration
+          thread.join
+          @integrations_in_progress.delete(thread)
+        end
       end
       completed_integrations
     end
