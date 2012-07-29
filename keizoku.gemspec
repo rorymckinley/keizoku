@@ -10,9 +10,9 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Rory McKinley"]
   s.date = "2012-07-29"
-  s.description = "Simple CI with Git"
+  s.description = "Simple CI using Git"
   s.email = "rorymckinley@gmail.com"
-  s.executables = ["keizoku-integrate", "keizoku-validate-rake-spec"]
+  s.executables = ["keizoku-cronjob", "keizoku-integrate", "keizoku-post-receive-hook", "keizoku-validate-rake-spec"]
   s.extra_rdoc_files = [
     "LICENSE.txt",
     "README.md",
@@ -29,8 +29,12 @@ Gem::Specification.new do |s|
     "README.rdoc",
     "Rakefile",
     "VERSION",
+    "bin/keizoku-cronjob",
     "bin/keizoku-integrate",
+    "bin/keizoku-post-receive-hook",
     "bin/keizoku-validate-rake-spec",
+    "examples/keizoku-post-receive-hook.conf",
+    "keizoku.gemspec",
     "lib/keizoku.rb",
     "lib/keizoku/git_hook.rb",
     "lib/keizoku/git_repo.rb",
@@ -51,8 +55,8 @@ Gem::Specification.new do |s|
   s.homepage = "http://github.com/rorymckinley/keizoku"
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
-  s.rubygems_version = "1.8.24"
-  s.summary = "Simple CI with Git"
+  s.rubygems_version = "1.8.19"
+  s.summary = "Simple CI using Git"
 
   if s.respond_to? :specification_version then
     s.specification_version = 3
