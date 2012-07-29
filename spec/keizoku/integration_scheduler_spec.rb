@@ -35,14 +35,10 @@ describe Keizoku::IntegrationScheduler do
 
   let(:queuer) { Keizoku::IntegrationQueuer.new("/tmp") }
   let(:integration_request) { {:workbench => "workbench_sprint666", :taggeremail => "sue@trial.co.za"} }
-  let(:scheduler) { Keizoku::IntegrationScheduler.new("/tmp", ->(o) { o =~ /keizoku-test-.+$/ }) }
+  let(:scheduler) { Keizoku::IntegrationScheduler.new("/tmp") }
 
   def enqueue(quantity = 1, request = integration_request, clock = ->() { DateTime.now })
     quantity.times { queuer.enqueue(request, clock) }
-  end
-
-  it "is initialised with the path to the queue" do
-    Keizoku::IntegrationScheduler.new("/tmp", ->() {}).should be_a Keizoku::IntegrationScheduler
   end
 
   it "enumerates all integration requests in the queue" do
@@ -80,7 +76,7 @@ describe Keizoku::IntegrationScheduler do
       scheduler.complete_integration_request(request)
       scheduler.should have_integration_requests_for_dates DateTime.new(1994), DateTime.new(2004)
 
-      scheduler = Keizoku::IntegrationScheduler.new("/tmp", ->(o) { o =~ /keizoku-test-.+$/ })
+      scheduler = Keizoku::IntegrationScheduler.new("/tmp")
       scheduler.read_queue
       scheduler.should have_integration_requests_for_dates DateTime.new(1994), DateTime.new(2004)
     end

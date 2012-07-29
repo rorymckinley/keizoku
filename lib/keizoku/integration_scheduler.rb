@@ -4,7 +4,7 @@ module Keizoku
 
     attr_reader :requests
 
-    def initialize(queue_path, basename_filter)
+    def initialize(queue_path, basename_filter = ->(o) { o =~ /^keizoku-.+$/ })
       @queue_path = Pathname.new(queue_path)
       @basename_filter = basename_filter
       empty_requests_and_paths
