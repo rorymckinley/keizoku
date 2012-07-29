@@ -8,8 +8,7 @@
 # COMMIT
 # TAG
 # REPO
-
-validate=$(readlink -f "$(dirname $0)/validate.sh")
+# VALIDATOR
 
 base=$(mktemp -d -t keizoku-integrate.XXXXXXXXXX) || exit 1
 message=$(mktemp -t keizoku-message.XXXXXXXXXX) || exit 1
@@ -27,7 +26,7 @@ git checkout -t -b ${WORKBENCH} origin/${WORKBENCH}
 git for-each-ref --format='%(contents)' ${TAG} > ${message}
 git merge --squash ${COMMIT}
 
-if ! ${validate}; then
+if ! ${VALIDATOR}; then
 	cleanup
 	exit 1
 fi
