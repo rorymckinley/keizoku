@@ -23,9 +23,10 @@ module Keizoku
     end
 
     def next_integration_request(filter = Proc.new { true })
-      oldest_filtered_request = oldest_request(filter)
-      @requests.reverse.detect do |request|
-        same_taggeremail_and_workbench?(request, oldest_filtered_request)
+      if oldest_filtered_request = oldest_request(filter)
+        @requests.reverse.detect do |request|
+          same_taggeremail_and_workbench?(request, oldest_filtered_request)
+        end
       end
     end
 

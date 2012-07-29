@@ -71,6 +71,11 @@ describe Keizoku::IntegrationScheduler do
       scheduler.next_integration_request(filter)[:queued_at].should eq DateTime.new(1994)
     end
 
+    it "#next_integration_request returns nil if all timelines are excluded by the filter" do
+      filter = ->(r) { false }
+      scheduler.next_integration_request(filter).should be_nil
+    end
+
     it "#complete_integration_request deletes the request and its predecessors on the timeline" do
       request = scheduler.next_integration_request
       scheduler.complete_integration_request(request)
