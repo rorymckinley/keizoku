@@ -4,6 +4,7 @@ module Keizoku
 
   class GitHook
 
+    #TODO Move repo to last arg so it can be defaulted to GitRepo.new
     def initialize(io, repo, repo_url)
       @io = io
       @repo = repo
