@@ -16,11 +16,11 @@ describe Keizoku::GitHook do
     repo.stub(:branch_exists?).and_return(true)
     repo
   end
+  let(:hook) { Keizoku::GitHook.new(io, repo) }
 
   context "without a CI tag" do
 
     let(:io) { FakeIO.new "" }
-    let(:hook) { Keizoku::GitHook.new(io) }
 
     it "returns false from parse" do
       hook.parse.should be_false
@@ -41,8 +41,6 @@ describe Keizoku::GitHook do
   context "when the tag is not associated with a branch" do
 
     let(:io) { FakeIO.new "refs/tags/ci_johndoe_no_branch_pushed" }
-    let(:hook) { Keizoku::GitHook.new(io, repo) }
-
     before(:each) { repo.stub(:branch_containing).and_return(nil) }
 
     it "returns false from parse" do
@@ -64,7 +62,6 @@ describe Keizoku::GitHook do
   context "when it cannot identify the intended workbench branch" do
 
     let(:io) { FakeIO.new "refs/tags/ci_johndoe_figment" }
-    let(:hook) { Keizoku::GitHook.new(io, repo) }
     before(:each) { repo.stub(:branch_containing).and_return("ci_johndoe_nonbench") }
 
     it "returns false from parse" do
@@ -86,7 +83,6 @@ describe Keizoku::GitHook do
   context "when the intended workbench branch does not exist" do
 
     let(:io) { FakeIO.new "refs/tags/ci_johndoe_tag" }
-    let(:hook) { Keizoku::GitHook.new(io, repo) }
     before(:each) { repo.stub(:branch_exists?).and_return(false) }
 
     it "returns false from parse" do
@@ -108,7 +104,6 @@ describe Keizoku::GitHook do
   context "when the tagger's email localpart is not in the CI tag name" do
 
     let(:io) { FakeIO.new "refs/tags/ci_tag" }
-    let(:hook) { Keizoku::GitHook.new(io, repo) }
 
     it "returns false from parse" do
       hook.parse.should be_false
@@ -136,7 +131,6 @@ describe Keizoku::GitHook do
       repo.should_receive(:branch_exists?).with("workbench_sprint666").and_return(true)
       repo
     end
-    let(:hook) { Keizoku::GitHook.new(io, repo) }
 
     it "returns true from parse" do
       hook.parse.should be_true
@@ -164,7 +158,6 @@ describe Keizoku::GitHook do
     let(:io) { FakeIO.new(
       "refs/heads/ci_johndoe_workbench_sprint666", "refs/tags/ci_johndoe_tag", "refs/tags/ci_johndoe_testing"
     ) }
-    let(:hook) { Keizoku::GitHook.new(io, repo) }
 
     it "returns false from parse" do
       hook.parse.should be_false

@@ -4,7 +4,7 @@ module Keizoku
 
   class GitHook
 
-    def initialize(io, repo = nil)
+    def initialize(io, repo)
       @io = io
       @repo = repo
       @errors = []
