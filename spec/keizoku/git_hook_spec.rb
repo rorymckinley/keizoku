@@ -8,7 +8,7 @@ end
 
 describe Keizoku::GitHook do
 
-  let(:tag_details) { { :taggeremail => 'johndoe@example.com', :object => "de661a9d" } }
+  let(:tag_details) { { :taggeremail => '<johndoe@example.com>', :taggername => "John Doe", :object => "de661a9d" } }
   let(:repo_url) { "file://path/to/repo" }
   let(:repo) do
     repo = double(Keizoku::GitRepo)
@@ -142,8 +142,9 @@ describe Keizoku::GitHook do
 
       integration_request = hook.integration_request
       integration_request[:workbench].should eq("workbench_sprint666")
-      integration_request[:taggeremail].should eq("johndoe@example.com")
-      integration_request[:commit].should eq("de661a9d")
+      integration_request[:taggeremail].should eq(tag_details[:taggeremail])
+      integration_request[:taggername].should eq(tag_details[:taggername])
+      integration_request[:commit].should eq(tag_details[:object])
       integration_request[:tag].should eq("refs/tags/ci_johndoe_tag")
       integration_request[:repo_url].should eq(repo_url)
     end

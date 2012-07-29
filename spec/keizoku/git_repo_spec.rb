@@ -20,18 +20,19 @@ describe Keizoku::GitRepo do
 
   end
 
-  def repo_has_tag(tag_refname, object, taggeremail)
-    shell_interface.should_receive(:popen).with("git for-each-ref --format='%(object) %(taggeremail)' #{tag_refname}")
-      .and_yield FakeIO.new("#{object} <#{taggeremail}>")
+  def repo_has_tag(tag_refname, object, taggername="John Doe", taggeremail="<johndoe@example.com>")
+    shell_interface.should_receive(:popen).with("git for-each-ref --format='%(object) %(taggername) %(taggeremail)' #{tag_refname}")
+      .and_yield FakeIO.new("#{object} #{taggername} #{taggeremail}")
   end
 
   describe "#tag_details(tag_refname)" do
 
     it "returns an hash containing object and taggeremail" do
-      repo_has_tag("refs/tags/tagname", "be659302b07a46ab6a4ac42a5859c3b8e293b431", "sheldonh@starjuice.net")
+      repo_has_tag("refs/tags/tagname", "be659302b07a46ab6a4ac42a5859c3b8e293b431")
       repo.tag_details('refs/tags/tagname').should eq({
         :object => 'be659302b07a46ab6a4ac42a5859c3b8e293b431',
-        :taggeremail => 'sheldonh@starjuice.net',
+        :taggername => 'John Doe',
+        :taggeremail => '<johndoe@example.com>',
       })
     end
 
@@ -44,7 +45,7 @@ describe Keizoku::GitRepo do
   describe "#branch_containing(tag_refname)" do
 
     it "returns the name of the branch that contains the tag" do
-      repo_has_tag("refs/tags/tagname", "be659302b07a46ab6a4ac42a5859c3b8e293b431", "sheldonh@starjuice.net")
+      repo_has_tag("refs/tags/tagname", "be659302b07a46ab6a4ac42a5859c3b8e293b431")
       repo_has_object("be659302b07a46ab6a4ac42a5859c3b8e293b431", "private_branch")
       repo.branch_containing("refs/tags/tagname").should eq("private_branch")
     end
