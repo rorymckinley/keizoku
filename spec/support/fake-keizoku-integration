@@ -1,0 +1,20 @@
+#!/bin/sh
+
+base=$(mktemp -d -t keizoku-integrate.XXXXXXXXXX) || exit 1
+message=$(mktemp -t keizoku-message.XXXXXXXXXX) || exit 1
+
+cleanup() {
+	cd /
+	[ -n "${base}" ] && rm -rf ${base}
+	[ -n "${message}" ] && rm -rf ${message}
+}
+trap cleanup SIGHUP SIGINT SIGTERM
+
+if ${VALIDATOR}; then
+        cleanup
+        exit 0
+else
+        cleanup
+        exit 1
+fi
+

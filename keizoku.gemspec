@@ -12,7 +12,7 @@ Gem::Specification.new do |s|
   s.date = "2012-07-29"
   s.description = "Simple CI using Git"
   s.email = "rorymckinley@gmail.com"
-  s.executables = ["keizoku-cronjob", "keizoku-integrate", "keizoku-post-receive-hook", "keizoku-validate-rake-spec"]
+  s.executables = ["keizoku-cronjob", "keizoku-post-receive-hook"]
   s.extra_rdoc_files = [
     "LICENSE.txt",
     "README.md",
@@ -30,10 +30,10 @@ Gem::Specification.new do |s|
     "Rakefile",
     "VERSION",
     "bin/keizoku-cronjob",
-    "bin/keizoku-integrate",
     "bin/keizoku-post-receive-hook",
-    "bin/keizoku-validate-rake-spec",
     "examples/keizoku-post-receive-hook.conf",
+    "helpers/keizoku-integrate",
+    "helpers/keizoku-validate-rake-spec",
     "keizoku.gemspec",
     "lib/keizoku.rb",
     "lib/keizoku/git_hook.rb",

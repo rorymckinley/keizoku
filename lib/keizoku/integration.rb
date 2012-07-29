@@ -2,18 +2,20 @@ module Keizoku
   class Integration
     attr_reader :request
 
-    def self.build(request, validator_path="keizoku-validate-rake-spec")
-      new(request, validator_path)
+    def self.build(request, validator_path="keizoku-validate-rake-spec", integration_helper = "keizoku-integrate")
+      new(request, validator_path, integration_helper)
     end
 
-    def initialize(request, validator_path)
+    def initialize(request, validator_path, integration_helper)
       @request = request
       @validator_path = validator_path
+      @integration_helper = integration_helper
     end
     private :initialize
 
     def integrate
-      @successful = system(environment, "keizoku-integrate")
+      ENV['SHELL'] = '/bin/sh'
+      @successful = system(environment, @integration_helper)
       @completed = true
       raise RuntimeError.new("Could not execute keizoku-integrate") if @successful.nil?
     end

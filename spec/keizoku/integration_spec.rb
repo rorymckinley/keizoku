@@ -45,6 +45,32 @@ describe Keizoku::Integration do
       integration.should_receive(:system).and_return(nil)
       expect { integration.integrate }.to raise_error
     end
+
+    # TODO this must go when integration tests prove system() is working
+    it "it works with an actual integration helper and real fork, with successful integration" do
+      helper = File.join(File.dirname(__FILE__), '..', 'support', 'fake-keizoku-integration')
+      @integration = Keizoku::Integration.build(request, "/bin/true", helper)
+      thr = Thread.fork do
+        @integration.integrate
+      end
+      sleep 1
+      thr.join
+      @integration.should be_completed
+      @integration.should be_successful
+    end
+
+    # TODO this must go when integration tests prove system() is working
+    it "it works with an actual integration helper and real fork, with failed integration" do
+      helper = File.join(File.dirname(__FILE__), '..', 'support', 'fake-keizoku-integration')
+      @integration = Keizoku::Integration.build(request, "/bin/false", helper)
+      thr = Thread.fork do
+        @integration.integrate
+      end
+      sleep 1
+      thr.join
+      @integration.should be_completed
+      @integration.should_not be_successful
+    end
   end
 
   describe "#completed?" do
