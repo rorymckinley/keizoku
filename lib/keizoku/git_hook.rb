@@ -4,9 +4,10 @@ module Keizoku
 
   class GitHook
 
-    def initialize(io, repo)
+    def initialize(io, repo, repo_url)
       @io = io
       @repo = repo
+      @repo_url = repo_url
       @errors = []
     end
 
@@ -88,7 +89,8 @@ module Keizoku
         :workbench => @workbench,
         :taggeremail => @taggeremail,
         :commit => @commit,
-        :tag => @tag
+        :tag => @tag,
+        :repo_url => @repo_url
       }
     end
 

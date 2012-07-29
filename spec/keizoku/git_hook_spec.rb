@@ -9,6 +9,7 @@ end
 describe Keizoku::GitHook do
 
   let(:tag_details) { { :taggeremail => 'johndoe@example.com', :object => "de661a9d" } }
+  let(:repo_url) { "file://path/to/repo" }
   let(:repo) do
     repo = double(Keizoku::GitRepo)
     repo.stub(:tag_details).and_return(tag_details)
@@ -16,7 +17,7 @@ describe Keizoku::GitHook do
     repo.stub(:branch_exists?).and_return(true)
     repo
   end
-  let(:hook) { Keizoku::GitHook.new(io, repo) }
+  let(:hook) { Keizoku::GitHook.new(io, repo, repo_url) }
 
   context "without a CI tag" do
 
@@ -144,6 +145,7 @@ describe Keizoku::GitHook do
       integration_request[:taggeremail].should eq("johndoe@example.com")
       integration_request[:commit].should eq("de661a9d")
       integration_request[:tag].should eq("refs/tags/ci_johndoe_tag")
+      integration_request[:repo_url].should eq(repo_url)
     end
 
     it "provides no error messages" do
