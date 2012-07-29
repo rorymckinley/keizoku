@@ -50,7 +50,7 @@ def run(config)
         end
         !dispatcher.full?
       end
-      request = scheduler.next_integration_request(dispatcher.busy_filter)
+      request = scheduler.next_integration_request(dispatcher.accept_filter)
       dispatcher.start_integrating(request) if request
     end
     if time_elapsed >= config[:queue_refresh_interval]

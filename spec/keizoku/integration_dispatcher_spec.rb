@@ -5,7 +5,7 @@ require 'keizoku/integration_dispatcher'
 
 RSpec::Matchers.define :be_busy_with do |request|
   match do |dispatcher|
-    not dispatcher.busy_filter.call(request)
+    not dispatcher.accept_filter.call(request)
   end
 end
 
@@ -113,20 +113,20 @@ describe Keizoku::IntegrationDispatcher do
 
   end
 
-  describe "#busy_filter" do
+  describe "#accept_filter" do
 
     before(:each) do
       @dispatcher = Keizoku::IntegrationDispatcher.new(1, integration_factory)
       @dispatcher.start_integrating(request)
     end
-    let(:filter) { @dispatcher.busy_filter }
+    let(:filter) { @dispatcher.accept_filter }
 
-    it "gives a callable that is false for any branch that is integrating" do
-      filter.call(request).should be_false
+    it "gives a callable that is true for any request whose branch is not busy integrating" do
+      filter.call({:workbench => 'workbench_another_sprint'}).should be_true
     end
 
-    it "gives a callable that is true for any branch that is integrating" do
-      filter.call({:workbench => 'workbench_another_sprint'}).should be_true
+    it "gives a callable that is false for any request whose branch is busy integrating" do
+      filter.call({:workbench => request[:workbench]}).should be_false
     end
 
   end

@@ -34,13 +34,15 @@ module Keizoku
       @pool_size <= @integrations_in_progress.size
     end
 
-    def busy_filter
+    def accept_filter
       ->(request) { not busy_with?(request) }
     end
 
     private
     def busy_with?(request)
-      @integrations_in_progress.detect { |integration, thread| integration.request == request }
+      @integrations_in_progress.detect do |integration, thread|
+        integration.request[:workbench] == request[:workbench]
+      end
     end
 
   end
