@@ -19,9 +19,19 @@ module Keizoku
     end
 
     def environment
-      integration_environment.merge(request_environment)
+      merge process_environment, integration_environment, request_environment
     end
     private :environment
+
+    def merge(*args)
+      args.inject({}) { |m, environment| m.merge! environment }
+    end
+    private :merge
+
+    def process_environment
+      ENV.to_hash
+    end
+    private :process_environment
 
     def integration_environment
       {"VALIDATOR" => @validator_path}

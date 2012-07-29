@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'keizoku/integration'
 
 describe Keizoku::Integration do
-  let(:request) { {:some => "junk", :more => "stuff"} }
+  let(:request) { {:keizoku_is_awesome => "junk", :keizoku_is_testing => "stuff"} }
   let(:integration) { Keizoku::Integration.build(request, "keizoku-validate-rake-spec") }
 
   describe ".build(request)" do
@@ -18,19 +18,26 @@ describe Keizoku::Integration do
     end
 
     it "defines a repo-specific environment for the integration script" do
-      integration.should_receive(:system) do |*args|
-        env = args.first
-        env['VALIDATOR'].should == "keizoku-validate-rake-spec"
-      end
+      integration.should_receive(:system) { |env, command| env['VALIDATOR'].should == "keizoku-validate-rake-spec" }
       integration.integrate
     end
 
     it "defines a request-specific environment for the integration script" do
-      integration.should_receive(:system) do |*args|
-        env = args.first
-        env['SOME'].should == "junk"
-        env['MORE'].should == "stuff"
+      integration.should_receive(:system) do |env, command|
+        env['KEIZOKU_IS_AWESOME'].should == "junk"
+        env['KEIZOKU_IS_TESTING'].should == "stuff"
       end
+      integration.integrate
+    end
+
+    it "does not touch the process environment" do
+      integration.should_receive(:system).and_return(true)
+      integration.integrate
+      request.each { |key, value| ENV.should_not include(key.to_s.upcase) }
+    end
+
+    it "it includes the process environment in the environment it defines for the integration script" do
+      integration.should_receive(:system) { |env, command| env['PATH'].should == ENV['PATH'] }
       integration.integrate
     end
 
