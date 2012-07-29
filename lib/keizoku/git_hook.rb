@@ -4,9 +4,10 @@ module Keizoku
 
   class GitHook
 
-    def initialize(io, repo)
+    def initialize(io, repo, repo_url)
       @io = io
       @repo = repo
+      @repo_url = repo_url
       @errors = []
     end
 
@@ -45,6 +46,7 @@ module Keizoku
     def set_tag_details
       details = @repo.tag_details(@tag)
       @taggeremail = details[:taggeremail]
+      @taggername = details[:taggername]
       @commit = details[:object]
     end
 
@@ -71,7 +73,7 @@ module Keizoku
     end
 
     def tag_belongs_to_tagger?
-      localpart = @taggeremail.gsub(/@.+$/, '')
+      localpart = @taggeremail.gsub(/<(.+)@.+>$/, '\1')
       @tag =~ %r{refs/tags/ci_#{localpart}_}
     end
 
@@ -87,8 +89,10 @@ module Keizoku
       @integration_request = {
         :workbench => @workbench,
         :taggeremail => @taggeremail,
+        :taggername => @taggername,
         :commit => @commit,
-        :tag => @tag
+        :tag => @tag,
+        :repo_url => @repo_url
       }
     end
 

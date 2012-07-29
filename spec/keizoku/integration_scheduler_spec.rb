@@ -34,7 +34,7 @@ describe Keizoku::IntegrationScheduler do
   end
 
   let(:queuer) { Keizoku::IntegrationQueuer.new("/tmp") }
-  let(:integration_request) { {:workbench => "workbench_sprint666", :taggeremail => "sue@trial.co.za"} }
+  let(:integration_request) { {:workbench => "workbench_sprint666", :taggeremail => "<sue@trial.co.za>"} }
   let(:scheduler) { Keizoku::IntegrationScheduler.new("/tmp") }
 
   def enqueue(quantity = 1, request = integration_request, clock = ->() { DateTime.now })
@@ -58,7 +58,7 @@ describe Keizoku::IntegrationScheduler do
       enqueue(1, integration_request.merge( :workbench => "workbench_other" ), ->() { DateTime.new(1994) })
       enqueue(1, integration_request, ->() { DateTime.new(1984) })
       enqueue(1, integration_request, ->() { DateTime.new(1974) })
-      enqueue(1, integration_request.merge( :taggeremail => "someoneelsemaybe@trial.co.za"), ->() { DateTime.new(2004) })
+      enqueue(1, integration_request.merge( :taggeremail => "<someoneelsemaybe@trial.co.za>"), ->() { DateTime.new(2004) })
       scheduler.read_queue
     end
 

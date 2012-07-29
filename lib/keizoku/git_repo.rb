@@ -11,10 +11,10 @@ module Keizoku
     end
 
     def tag_details(tag_refname)
-      @shell_interface.popen("git for-each-ref --format='%(object) %(taggeremail)' #{tag_refname}") do |io|
-        object, bracketed_email = io.gets.chomp.split
-        email = bracketed_email.gsub(/[<>]/, '')
-        { :object => object, :taggeremail => email }
+      @shell_interface.popen("git for-each-ref --format='%(object) %(taggername) %(taggeremail)' #{tag_refname}") do |io|
+        io.gets.chomp =~ /^(\S+)\s+(.+)\s+(<.+>)$/
+        object, name, email = $1, $2, $3
+        { :object => object, :taggername => name, :taggeremail => email }
       end
     end
 
