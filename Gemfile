@@ -1,5 +1,7 @@
 source "http://rubygems.org"
 
+gem 'keizoku', :path => File.dirname(__FILE__)
+gem 'lockfile', '~> 2.1.0'
 gem 'uuid', '~> 2.3.5'
 
 group :development do

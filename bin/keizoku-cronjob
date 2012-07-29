@@ -1,0 +1,48 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'keizoku'
+require 'lockfile'
+
+config = {}
+config[:queue_path] = ARGV[0]
+config[:lockfile] = "#{config[:queue_path]}/.keizoku-cronjob.lock"
+config[:queue_refresh_interval] = 5
+config[:spin_guard_interval] = 1
+config[:pool_size] = 3
+
+class NullNotifier; def notify(integration); end; end
+
+def time_operation
+  start = Time.now
+  yield
+  Time.now - start
+end
+
+def run(config)
+  dispatcher = Keizoku::IntegrationDispatcher.new(config[:pool_size])
+  scheduler = Keizoku::IntegrationScheduler.new(config[:queue_path])
+  notifier = NullNotifier.new
+
+  until dispatcher.empty? and scheduler.empty?
+    time_elapsed = time_operation do
+      wait_until { !dispatcher.full? }
+      request = scheduler.next_integration_request(dispatcher.busy_filter)
+      dispatcher.start_integrating(request) if request
+      dispatcher.completed_integrations.each do |integration|
+        scheduler.complete_integration_request(integration.request)
+        notifier.notify(integration)
+      end
+    end
+    if time_elapsed >= config[:queue_refresh_interval]
+      scheduler.read_queue
+    end
+    if time_elapsed < config[:spin_guard_interval]
+      sleep config[:spin_guard_interval]
+    end
+  end
+end
+
+Lockfile.new config[:lockfile], :retries => 0, :max_age => 30, :suspend => 15, :refresh => 10 do
+  run config
+end
