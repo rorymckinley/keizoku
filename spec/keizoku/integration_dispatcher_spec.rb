@@ -32,8 +32,8 @@ describe Keizoku::IntegrationDispatcher do
     end
 
     it "builds an integration for the request" do
-      Keizoku::Integration.should_receive(:build).with(request).and_return(double.as_null_object)
-      @dispatcher = Keizoku::IntegrationDispatcher.new(1, ->(r) { Keizoku::Integration.build(r) })
+      Keizoku::Integration.should_receive(:build).with(request, "keizoku-validate-minitest").and_return(double.as_null_object)
+      @dispatcher = Keizoku::IntegrationDispatcher.new(1, ->(r) { Keizoku::Integration.build(r, "keizoku-validate-minitest") })
       @dispatcher.start_integrating(request)
     end
 
@@ -72,7 +72,7 @@ describe Keizoku::IntegrationDispatcher do
 
   describe "#empty?" do
     before(:each) do
-      @dispatcher = Keizoku::IntegrationDispatcher.new(1)
+      @dispatcher = Keizoku::IntegrationDispatcher.new(1, ->(r) { double.as_null_object })
     end
 
     it "is false when integrations are in progress" do
