@@ -11,7 +11,7 @@ end
 
 # To accommodate a small delay when working with threads
 def tempus_fugit
-  sleep 0.001
+  sleep 0.005
 end
 
 describe Keizoku::IntegrationDispatcher do

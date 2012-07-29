@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'date'
+require 'uuid'
 require 'keizoku/integration_queuer'
 
 require 'keizoku/integration_scheduler'
@@ -23,7 +24,7 @@ end
 describe Keizoku::IntegrationScheduler do
 
   def clean_up_queue
-    Dir.glob("/tmp/keizoku-test-*").each { |f| File.unlink(f) }
+    Dir.glob("/tmp/keizoku-*").each { |f| File.unlink(f) }
   end
 
   around(:each) do |example|
@@ -32,8 +33,7 @@ describe Keizoku::IntegrationScheduler do
     clean_up_queue
   end
 
-  let(:generator) { ->(o) { "keizoku-test-#{rand(1000)}" } }
-  let(:queuer) { Keizoku::IntegrationQueuer.new("/tmp", generator) }
+  let(:queuer) { Keizoku::IntegrationQueuer.new("/tmp") }
   let(:integration_request) { {:workbench => "workbench_sprint666", :taggeremail => "sue@trial.co.za"} }
   let(:scheduler) { Keizoku::IntegrationScheduler.new("/tmp", ->(o) { o =~ /keizoku-test-.+$/ }) }
 

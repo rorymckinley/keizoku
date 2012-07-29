@@ -7,7 +7,7 @@ module Keizoku
   class IntegrationQueuer
     attr_reader :queue_path, :request_path
 
-    def initialize(queue_path, filename_generator = ->(o) { UUID.generate })
+    def initialize(queue_path, filename_generator = ->(o) { "keizoku-#{UUID.generate}" })
       @queue_path = Pathname.new(queue_path)
       @filename_generator = filename_generator
     end
