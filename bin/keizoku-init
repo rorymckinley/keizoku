@@ -1,0 +1,41 @@
+#!/usr/bin/env ruby
+
+require 'fileutils'
+require 'yaml'
+
+def error(message)
+  $stderr.puts "keizoku-init: error: #{message}"
+  exit 1
+end
+
+def input(prompt)
+  $stdout.write("#{prompt} ")
+  $stdout.flush
+  $stdin.gets.chomp
+end
+
+def copy_script(source, destination = nil)
+  destination ||= source
+  source = File.join(File.dirname(__FILE__), source)
+  destination = File.join("hooks", destination)
+  FileUtils.cp(source, destination)
+end
+
+%w[ hooks objects refs ].each do |path|
+  error "should be run in a bare git repo" unless Dir.exists?(path)
+end
+
+repo_url = input "What is the URL you use to write to this repository?"
+queue_path = input "What is the path to the integration request queue?"
+
+if ! File.exists?(queue_path)
+  error "integration request queue '#{queue_path}' must exist"
+end
+
+copy_script('keizoku-post-receive-hook', 'post-receive')
+copy_script('keizoku-cronjob')
+
+File.open(File.join('hooks', 'post-receive.conf'), 'w') do |io|
+  config = {'repo_url' => repo_url, 'queue_path' => queue_path}.to_yaml
+  io.puts config
+end
