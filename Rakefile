@@ -17,8 +17,8 @@ Jeweler::Tasks.new do |gem|
   gem.name = "keizoku"
   gem.homepage = "http://github.com/rorymckinley/keizoku"
   gem.license = "MIT"
-  gem.summary = %Q{TODO: one-line summary of your gem}
-  gem.description = %Q{TODO: longer description of your gem}
+  gem.summary = %Q{Simple CI using Git}
+  gem.description = %Q{Simple CI using Git}
   gem.email = "rorymckinley@gmail.com"
   gem.authors = ["Rory McKinley"]
   # dependencies defined in Gemfile
