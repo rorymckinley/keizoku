@@ -11,7 +11,17 @@ config[:queue_refresh_interval] = 5
 config[:spin_guard_interval] = 1
 config[:pool_size] = 3
 
-class NullNotifier; def notify(integration); end; end
+class NullNotifier
+  def initialize(logdir)
+    @logdir = logdir
+  end
+
+  def notify(integration)
+    File.open(File.join(@logdir, ".keizoku-cronjob.log"), "a") do |f|
+      f.puts integration.inspect
+    end
+  end
+end
 
 def time_operation
   start = Time.now
@@ -19,20 +29,29 @@ def time_operation
   Time.now - start
 end
 
+def wait_until(interval)
+  while !yield
+    sleep interval
+  end
+end
+
 def run(config)
   dispatcher = Keizoku::IntegrationDispatcher.new(config[:pool_size])
   scheduler = Keizoku::IntegrationScheduler.new(config[:queue_path])
-  notifier = NullNotifier.new
+  notifier = NullNotifier.new(config[:queue_path])
 
+  scheduler.read_queue
   until dispatcher.empty? and scheduler.empty?
     time_elapsed = time_operation do
-      wait_until { !dispatcher.full? }
+      wait_until(config[:spin_guard_interval]) do
+        dispatcher.harvest_completed_integrations.each do |integration|
+          scheduler.complete_integration_request(integration.request)
+          notifier.notify(integration)
+        end
+        !dispatcher.full?
+      end
       request = scheduler.next_integration_request(dispatcher.busy_filter)
       dispatcher.start_integrating(request) if request
-      dispatcher.completed_integrations.each do |integration|
-        scheduler.complete_integration_request(integration.request)
-        notifier.notify(integration)
-      end
     end
     if time_elapsed >= config[:queue_refresh_interval]
       scheduler.read_queue
