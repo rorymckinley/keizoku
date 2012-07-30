@@ -22,7 +22,7 @@ Installation
   + Once it has done that, it will generate a post-receive hook, a
     post-receive.conf file and a keizoku-cronjob file in your repo's
     hooks directory.
-  + Setup a crontab entry to run the keizoku-cronjob as often as you
+* Setup a crontab entry to run the keizoku-cronjob as often as you
     like.
 
 Using Keizoku
