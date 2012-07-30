@@ -1,0 +1,45 @@
+#!/usr/bin/env ruby
+
+require 'fileutils'
+require 'tmpdir'
+
+require 'rubygems'
+require 'uuid'
+
+workbench = ENV['WORKBENCH']
+taggername = ENV['TAGGERNAME']
+taggeremail = ENV['TAGGEREMAIL']
+commit = ENV['COMMIT']
+tag = ENV['TAG']
+repo_url = ENV['REPO_URL']
+validator = ENV['VALIDATOR']
+
+def run_or_die(command)
+  system(command) || exit(1)
+end
+
+def cleanup(*paths)
+  paths.each { |p| FileUtils.rm_rf(p) }
+end
+
+job = UUID.generate
+message = File.join(Dir.tmpdir, "keizoku-message.#{job}")
+basedir = File.join(Dir.tmpdir, "keizoku-integration.#{job}")
+FileUtils.mkdir_p(basedir)
+
+workdir = File.join(basedir, 'work')
+run_or_die("git clone #{repo_url} #{workdir}")
+Dir.chdir(workdir)
+run_or_die("git checkout -t -b #{workbench} origin/#{workbench}")
+run_or_die("git for-each-ref --format='%(contents)' #{tag} > #{message}")
+run_or_die("git merge --squash #{commit}")
+
+if system(validator)
+  run_or_die("git commit -F #{message} --author='#{taggername} #{taggeremail}'")
+  run_or_die("git push")
+  cleanup(message, basedir)
+  exit(0)
+else
+  cleanup(message, basedir)
+  exit(1)
+end
