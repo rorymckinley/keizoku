@@ -4,6 +4,14 @@ require 'rubygems'
 require 'keizoku'
 require 'lockfile'
 
+def debug(message)
+  $stderr.puts message if ENV['DEBUG']
+end
+
+def render_request(r)
+  "#{r[:workbench]} #{r[:taggeremail]} #{r[:commit]}"
+end
+
 config = {}
 config[:queue_path] = ARGV[0]
 config[:lockfile] = "#{config[:queue_path]}/.keizoku-cronjob.lock"
@@ -18,7 +26,12 @@ class NullNotifier
 
   def notify(integration)
     File.open(File.join(@logdir, ".keizoku-cronjob.log"), "a") do |f|
-      f.puts integration.inspect
+      f.puts "=" * 79
+      f.puts "Request: #{render_request(integration.request)}"
+      f.puts integration.successful? ? "Outcome: successful" : "Outcome: FAILED"
+      f.puts
+      f.puts integration.log
+      f.puts
     end
   end
 end
@@ -45,12 +58,15 @@ def run(config)
     time_elapsed = time_operation do
       wait_until(config[:spin_guard_interval]) do
         dispatcher.harvest_completed_integrations.each do |integration|
+	  debug "harvesting #{render_request(integration.request)}"
           scheduler.complete_integration_request(integration.request)
           notifier.notify(integration)
         end
+	debug "dispatcher full!" if dispatcher.full?
         !dispatcher.full?
       end
       request = scheduler.next_integration_request(dispatcher.accept_filter)
+      debug "integrating #{render_request(request)}" if request
       dispatcher.start_integrating(request) if request
     end
     if time_elapsed >= config[:queue_refresh_interval]
