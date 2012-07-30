@@ -49,27 +49,27 @@ describe Keizoku::Integration do
     # TODO this must go when integration tests prove system() is working
     it "it works with an actual integration helper and real fork, with successful integration" do
       helper = File.join(File.dirname(__FILE__), '..', 'support', 'fake-keizoku-integration')
-      @integration = Keizoku::Integration.build(request, "/bin/true", helper)
-      thr = Thread.fork do
-        @integration.integrate
+      integrations = [1, 2].collect { Keizoku::Integration.build(request, "/bin/true", helper) }
+      threads = integrations.collect { |i| Thread.fork { i.integrate } }
+      sleep 0.025
+      threads.each { |t| t.join }
+      integrations.each do |i|
+        i.should be_completed
+        i.should be_successful
       end
-      sleep 1
-      thr.join
-      @integration.should be_completed
-      @integration.should be_successful
     end
 
     # TODO this must go when integration tests prove system() is working
     it "it works with an actual integration helper and real fork, with failed integration" do
       helper = File.join(File.dirname(__FILE__), '..', 'support', 'fake-keizoku-integration')
-      @integration = Keizoku::Integration.build(request, "/bin/false", helper)
-      thr = Thread.fork do
-        @integration.integrate
+      integrations = [1, 2].collect { Keizoku::Integration.build(request, "/bin/false", helper) }
+      threads = integrations.collect { |i| Thread.fork { i.integrate } }
+      sleep 0.025
+      threads.each { |t| t.join }
+      integrations.each do |i|
+        i.should be_completed
+        i.should_not be_successful
       end
-      sleep 1
-      thr.join
-      @integration.should be_completed
-      @integration.should_not be_successful
     end
   end
 

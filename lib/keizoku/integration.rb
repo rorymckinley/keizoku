@@ -14,7 +14,6 @@ module Keizoku
     private :initialize
 
     def integrate
-      ENV['SHELL'] = '/bin/sh'
       @successful = system(environment, @integration_helper)
       @completed = true
       raise RuntimeError.new("Could not execute keizoku-integrate") if @successful.nil?
