@@ -1,5 +1,5 @@
 module Keizoku
-  class IntegrationDispatcher
+  class Dispatcher
 
     def initialize(pool_size, integration_factory = ->(r) { Keizoku::Integration.build(r) })
       @integration_factory = integration_factory

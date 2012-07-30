@@ -36,7 +36,7 @@ def wait_until(interval)
 end
 
 def run(config)
-  dispatcher = Keizoku::IntegrationDispatcher.new(config[:pool_size])
+  dispatcher = Keizoku::Dispatcher.new(config[:pool_size])
   scheduler = Keizoku::IntegrationScheduler.new(config[:queue_path])
   notifier = NullNotifier.new(config[:queue_path])
 
