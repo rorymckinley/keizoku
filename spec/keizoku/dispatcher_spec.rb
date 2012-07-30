@@ -12,7 +12,7 @@ end
 describe Keizoku::Dispatcher do
 
   after(:each) do
-    # An optimisation to catch any unjoined threads
+    # Clean up unjoined threads from tests that don't cover full lifecycle
     @dispatcher.harvest_completed_integrations if @dispatcher
   end
 
@@ -29,8 +29,9 @@ describe Keizoku::Dispatcher do
     end
 
     it "builds an integration for the request" do
-      Keizoku::Integration.should_receive(:build).with(request, "keizoku-validate-minitest").and_return(double.as_null_object)
-      @dispatcher = Keizoku::Dispatcher.new(1, ->(r) { Keizoku::Integration.build(r, "keizoku-validate-minitest") })
+      custom_validator = "keizoku-validate-minitest"
+      Keizoku::Integration.should_receive(:build).with(request, custom_validator).and_return(double.as_null_object)
+      @dispatcher = Keizoku::Dispatcher.new(1, ->(r) { Keizoku::Integration.build(r, custom_validator) })
       @dispatcher.start_integrating(request)
     end
 
