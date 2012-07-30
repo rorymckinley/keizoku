@@ -45,7 +45,7 @@ describe Keizoku::Integration do
       helper = File.join(File.dirname(__FILE__), '..', 'support', 'fake-keizoku-integration')
       integrations = [1, 2].collect { Keizoku::Integration.build(request, "/bin/true", helper) }
       threads = integrations.collect { |i| Thread.fork { i.integrate } }
-      sleep 0.025
+      tempus_fugit
       threads.each { |t| t.join }
       integrations.each do |i|
         i.should be_completed
@@ -58,7 +58,7 @@ describe Keizoku::Integration do
       helper = File.join(File.dirname(__FILE__), '..', 'support', 'fake-keizoku-integration')
       integrations = [1, 2].collect { Keizoku::Integration.build(request, "/bin/false", helper) }
       threads = integrations.collect { |i| Thread.fork { i.integrate } }
-      sleep 0.025
+      tempus_fugit
       threads.each { |t| t.join }
       integrations.each do |i|
         i.should be_completed
@@ -70,7 +70,7 @@ describe Keizoku::Integration do
       helper = File.join(File.dirname(__FILE__), '..', 'support', 'fake-keizoku-integration')
       @integration = Keizoku::Integration.build(request, "/bin/echo Wonderful success", helper)
       thr = Thread.fork { @integration.integrate }
-      sleep 0.025
+      tempus_fugit
       thr.join
       @integration.log.should match(/Wonderful success/)
     end

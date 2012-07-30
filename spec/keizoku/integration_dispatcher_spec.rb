@@ -9,11 +9,6 @@ RSpec::Matchers.define :be_busy_with do |request|
   end
 end
 
-# To accommodate a small delay when working with threads
-def tempus_fugit
-  sleep 0.005
-end
-
 describe Keizoku::Dispatcher do
 
   after(:each) do
