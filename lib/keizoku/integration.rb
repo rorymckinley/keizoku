@@ -22,9 +22,11 @@ module Keizoku
         log_r.close
         exit_r.close
         ENV.replace(environment)
-        log = `#{@integration_helper} 2>&1`
-        exit_w.puts $?.to_i
-        log_w.write log
+        if File.executable?(@integration_helper)
+          log = `#{@integration_helper} 2>&1`
+          exit_w.puts $?.to_i
+          log_w.write log
+        end
         exit_w.close
         log_w.close
       end
@@ -36,7 +38,9 @@ module Keizoku
         @log += log_r.read if log_r.ready?
         sleep 0.001
       end
-      @successful = exit_r.gets.chomp == '0' unless exit_r.eof?
+      unless exit_r.eof?
+        @successful = exit_r.gets.chomp == '0'
+      end
       @log += log_r.read unless log_r.eof?
       exit_r.close
       log_r.close

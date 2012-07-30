@@ -34,9 +34,10 @@ describe Keizoku::Integration do
       @integration.log.should include("PATH=#{ENV['PATH']}")
     end
 
-    it "raises an error if the integration script could not be executed" do
-      integration.should_receive(:system).and_return(nil)
-      expect { integration.integrate }.to raise_error
+    it "raises an error if the integration script is not executable" do
+      helper = File.join(File.dirname(__FILE__), '..', 'support', 'does_not_exist')
+      @integration = Keizoku::Integration.build(request, "/bin/true", helper)
+      expect { @integration.integrate }.to raise_error
     end
 
     # TODO this must go when integration tests prove system() is working
@@ -76,31 +77,31 @@ describe Keizoku::Integration do
   end
 
   describe "#completed?" do
-    before(:each) do
-      integration.stub(:system).and_return(true)
-    end
-
     it "is false if not completed" do
-      integration.should_not be_completed
+      helper = File.join(File.dirname(__FILE__), '..', 'support', 'fake-keizoku-integration')
+      @integration = Keizoku::Integration.build(request, "/bin/true", helper)
+      @integration.should_not be_completed
     end
 
     it "is true if completed (regardless of integration outcome)" do
-      integration.integrate
-      integration.should be_completed
+      helper = File.join(File.dirname(__FILE__), '..', 'support', 'fake-keizoku-integration')
+      @integration = Keizoku::Integration.build(request, "/bin/true", helper)
+      @integration.integrate
+      @integration.should be_completed
     end
   end
 
   describe "#successful?" do
     it "is true when the integration script was successful" do
       helper = File.join(File.dirname(__FILE__), '..', 'support', 'fake-keizoku-integration')
-      @integration = Keizoku::Integration.build(request, "exit 0", helper)
+      @integration = Keizoku::Integration.build(request, "/bin/true", helper)
       @integration.integrate
       @integration.should be_successful
     end
 
     it "is false when the integration script was not successful" do
       helper = File.join(File.dirname(__FILE__), '..', 'support', 'fake-keizoku-integration')
-      @integration = Keizoku::Integration.build(request, "exit 1", helper)
+      @integration = Keizoku::Integration.build(request, "/bin/false", helper)
       @integration.integrate
       @integration.should_not be_successful
     end
