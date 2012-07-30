@@ -38,14 +38,8 @@ module Keizoku
 
     def child_process_handler
       close_ipc_readers
-      try_execute_child_process
+      execute_child_process
       close_ipc_writers
-    end
-
-    def try_execute_child_process
-      if File.executable?(@command)
-        execute_child_process
-      end
     end
 
     def execute_child_process
@@ -58,7 +52,6 @@ module Keizoku
       close_ipc_writers
       harvest_child_process_outcome
       close_ipc_readers
-      raise RuntimeError.new("Could not execute #{@command}") if @successful.nil?
     end
 
     def close_ipc_readers
@@ -73,7 +66,7 @@ module Keizoku
 
     def harvest_child_process_outcome
       @log = ''
-      while !Process.wait(@child_pid, Process::WNOHANG)
+      until Process.wait(@child_pid, Process::WNOHANG)
         read_child_success if @exit_r.ready?
         read_child_log if @log_r.ready?
         sleep 0.001

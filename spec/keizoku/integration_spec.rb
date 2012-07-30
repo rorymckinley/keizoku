@@ -34,10 +34,11 @@ describe Keizoku::Integration do
       @integration.log.should include("PATH=#{ENV['PATH']}")
     end
 
-    it "raises an error if the integration script is not executable" do
+    it "logs an error if the integration script is not executable" do
       helper = File.join(File.dirname(__FILE__), '..', 'support', 'does_not_exist')
       @integration = Keizoku::Integration.build(request, "/bin/true", helper)
-      expect { @integration.integrate }.to raise_error
+      expect { @integration.integrate }.to_not raise_error
+      @integration.log.should include('No such file or directory')
     end
 
     # TODO this must go when integration tests prove system() is working
