@@ -9,7 +9,7 @@ def debug(message)
 end
 
 def render_request(r)
-  "#{r[:workbench]} #{r[:taggeremail]} #{r[:commit]}"
+  "#{r[:queued_at].to_time} #{r[:workbench]} #{r[:taggeremail]} #{r[:commit]}"
 end
 
 config = {}
@@ -26,10 +26,11 @@ class NullNotifier
 
   def notify(integration)
     File.open(File.join(@logdir, ".keizoku-cronjob.log"), "a") do |f|
-      f.puts "=" * 79
-      f.puts "Request: #{render_request(integration.request)}"
-      f.puts integration.successful? ? "Outcome: successful" : "Outcome: FAILED"
-      f.puts
+      f.puts "=" * 80
+      f.puts "Request:      #{render_request(integration.request)}"
+      f.puts "Completed at: #{Time.now}"
+      f.puts "Outcome:      #{integration.successful? ? 'successful' : 'FAILED'}"
+      f.puts "Log:"
       f.puts integration.log
       f.puts
     end
@@ -58,7 +59,7 @@ def run(config)
     time_elapsed = time_operation do
       wait_until(config[:spin_guard_interval]) do
         dispatcher.harvest_completed_integrations.each do |integration|
-	  debug "harvesting #{render_request(integration.request)}"
+	  debug "harvesting  #{render_request(integration.request)}"
           scheduler.complete_integration_request(integration.request)
           notifier.notify(integration)
         end
