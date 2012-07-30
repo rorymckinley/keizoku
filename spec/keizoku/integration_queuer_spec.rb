@@ -1,13 +1,13 @@
 require 'spec_helper'
 require 'date'
 
-require 'keizoku/integration_queuer'
+require 'keizoku/queuer'
 
-describe Keizoku::IntegrationQueuer do
+describe Keizoku::Queuer do
 
   after(:all) { Dir.glob('/tmp/keizoku-*').each { |f| File.unlink(f) } }
 
-  let(:queuer) { Keizoku::IntegrationQueuer.new("/tmp") }
+  let(:queuer) { Keizoku::Queuer.new("/tmp") }
   let(:integration_request) { { :some => :junk } }
 
   it "returns the path of the file into which the request was enqueued" do

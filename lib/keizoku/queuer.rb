@@ -4,7 +4,7 @@ require 'uuid'
 
 module Keizoku
 
-  class IntegrationQueuer
+  class Queuer
     attr_reader :queue_path, :request_path
 
     def initialize(queue_path, filename_generator = ->(o) { "keizoku-#{UUID.generate}" })

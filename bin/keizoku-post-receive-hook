@@ -6,7 +6,7 @@ require 'yaml'
 
 git_repo = Keizoku::GitRepo.new
 config = YAML.load_file("#{__FILE__}.conf")
-queuer = Keizoku::IntegrationQueuer.new(config["queue_path"])
+queuer = Keizoku::Queuer.new(config["queue_path"])
 hook = Keizoku::GitHook.new($stdin, git_repo, config["repo_url"])
 
 if hook.parse

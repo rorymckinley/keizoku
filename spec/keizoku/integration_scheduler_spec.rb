@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'date'
 require 'uuid'
-require 'keizoku/integration_queuer'
+require 'keizoku/queuer'
 
 require 'keizoku/integration_scheduler'
 
@@ -33,7 +33,7 @@ describe Keizoku::IntegrationScheduler do
     clean_up_queue
   end
 
-  let(:queuer) { Keizoku::IntegrationQueuer.new("/tmp") }
+  let(:queuer) { Keizoku::Queuer.new("/tmp") }
   let(:integration_request) { {:workbench => "workbench_sprint666", :taggeremail => "<sue@trial.co.za>"} }
   let(:scheduler) { Keizoku::IntegrationScheduler.new("/tmp") }
 
