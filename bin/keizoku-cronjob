@@ -4,12 +4,12 @@ require 'rubygems'
 require 'keizoku'
 require 'lockfile'
 
-def debug(message)
-  $stderr.puts message if ENV['DEBUG']
+def info(message)
+  puts message
 end
 
 def render_request(r)
-  "#{r[:queued_at].to_time} #{r[:workbench]} #{r[:taggeremail]} #{r[:commit]}"
+  "#{r[:queued_at].to_time} #{r[:workbench]} #{r[:taggeremail]} #{r[:commit].slice(0,8)}"
 end
 
 config = {}
@@ -19,7 +19,7 @@ config[:queue_refresh_interval] = 5
 config[:spin_guard_interval] = 1
 config[:pool_size] = 3
 
-class NullNotifier
+class LogNotifier
   def initialize(logdir)
     @logdir = logdir
   end
@@ -52,22 +52,23 @@ end
 def run(config)
   dispatcher = Keizoku::Dispatcher.new(config[:pool_size])
   scheduler = Keizoku::Scheduler.new(config[:queue_path])
-  notifier = NullNotifier.new(config[:queue_path])
+  notifier = LogNotifier.new(config[:queue_path])
 
   scheduler.read_queue
   until dispatcher.empty? and scheduler.empty?
     time_elapsed = time_operation do
       wait_until(config[:spin_guard_interval]) do
         dispatcher.harvest_completed_integrations.each do |integration|
-	  debug "harvesting  #{render_request(integration.request)}"
+          outcome = integration.successful? ? 'OK' : 'FAILED'
+	  info "harvesting  #{render_request(integration.request)} #{outcome}"
           scheduler.complete_integration_request(integration.request)
           notifier.notify(integration)
         end
-	debug "dispatcher full!" if dispatcher.full?
+	info "dispatcher full!" if dispatcher.full?
         !dispatcher.full?
       end
       request = scheduler.next_integration_request(dispatcher.accept_filter)
-      debug "integrating #{render_request(request)}" if request
+      info "integrating #{render_request(request)}" if request
       dispatcher.start_integrating(request) if request
     end
     if time_elapsed >= config[:queue_refresh_interval]
