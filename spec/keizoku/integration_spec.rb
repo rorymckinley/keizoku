@@ -12,33 +12,26 @@ describe Keizoku::Integration do
   end
 
   describe "#integrate" do
-    it "executes the integration script" do
-      integration.should_receive(:system).with(anything, "keizoku-integrate").and_return(true)
-      integration.integrate
-    end
-
-    it "defines a repo-specific environment for the integration script" do
-      integration.should_receive(:system) { |env, command| env['VALIDATOR'].should == "keizoku-validate-rake-spec" }
-      integration.integrate
-    end
-
     it "defines a request-specific environment for the integration script" do
-      integration.should_receive(:system) do |env, command|
-        env['KEIZOKU_IS_AWESOME'].should == "junk"
-        env['KEIZOKU_IS_TESTING'].should == "stuff"
-      end
-      integration.integrate
+      helper = File.join(File.dirname(__FILE__), '..', 'support', 'fake-keizoku-integration')
+      @integration = Keizoku::Integration.build(request, "/bin/true", helper)
+      @integration.integrate
+      @integration.log.should include("KEIZOKU_IS_AWESOME=junk")
+      @integration.log.should include("KEIZOKU_IS_TESTING=stuff")
     end
 
     it "does not touch the process environment" do
-      integration.should_receive(:system).and_return(true)
-      integration.integrate
+      helper = File.join(File.dirname(__FILE__), '..', 'support', 'fake-keizoku-integration')
+      @integration = Keizoku::Integration.build(request, "/bin/true", helper)
+      @integration.integrate
       request.each { |key, value| ENV.should_not include(key.to_s.upcase) }
     end
 
     it "it includes the process environment in the environment it defines for the integration script" do
-      integration.should_receive(:system) { |env, command| env['PATH'].should == ENV['PATH'] }
-      integration.integrate
+      helper = File.join(File.dirname(__FILE__), '..', 'support', 'fake-keizoku-integration')
+      @integration = Keizoku::Integration.build(request, "/bin/true", helper)
+      @integration.integrate
+      @integration.log.should include("PATH=#{ENV['PATH']}")
     end
 
     it "raises an error if the integration script could not be executed" do
@@ -99,15 +92,17 @@ describe Keizoku::Integration do
 
   describe "#successful?" do
     it "is true when the integration script was successful" do
-      integration.should_receive(:system).and_return(true)
-      integration.integrate
-      integration.should be_successful
+      helper = File.join(File.dirname(__FILE__), '..', 'support', 'fake-keizoku-integration')
+      @integration = Keizoku::Integration.build(request, "exit 0", helper)
+      @integration.integrate
+      @integration.should be_successful
     end
 
     it "is false when the integration script was not successful" do
-      integration.should_receive(:system).and_return(false)
-      integration.integrate
-      integration.should_not be_successful
+      helper = File.join(File.dirname(__FILE__), '..', 'support', 'fake-keizoku-integration')
+      @integration = Keizoku::Integration.build(request, "exit 1", helper)
+      @integration.integrate
+      @integration.should_not be_successful
     end
   end
 end
