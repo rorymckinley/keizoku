@@ -73,10 +73,10 @@ module Keizoku
 
     def harvest_child_process_outcome
       @log = ''
-      while Process.wait(@child_pid, Process::WNOHANG)
+      while !Process.wait(@child_pid, Process::WNOHANG)
         read_child_success if @exit_r.ready?
         read_child_log if @log_r.ready?
-        sleep 0.1
+        sleep 0.001
       end
       read_child_success unless @exit_r.eof?
       read_child_log unless @log_r.eof?
