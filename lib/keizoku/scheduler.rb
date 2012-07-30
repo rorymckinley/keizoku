@@ -1,6 +1,6 @@
 module Keizoku
 
-  class IntegrationScheduler
+  class Scheduler
 
     attr_reader :requests
 

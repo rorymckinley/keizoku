@@ -3,7 +3,7 @@ require 'date'
 require 'uuid'
 require 'keizoku/queuer'
 
-require 'keizoku/integration_scheduler'
+require 'keizoku/scheduler'
 
 RSpec::Matchers.define :be_integration_request do |expected|
   match do |actual|
@@ -21,7 +21,7 @@ RSpec::Matchers.define :have_integration_requests_for_dates do |*dates|
   end
 end
 
-describe Keizoku::IntegrationScheduler do
+describe Keizoku::Scheduler do
 
   def clean_up_queue
     Dir.glob("/tmp/keizoku-*").each { |f| File.unlink(f) }
@@ -35,7 +35,7 @@ describe Keizoku::IntegrationScheduler do
 
   let(:queuer) { Keizoku::Queuer.new("/tmp") }
   let(:integration_request) { {:workbench => "workbench_sprint666", :taggeremail => "<sue@trial.co.za>"} }
-  let(:scheduler) { Keizoku::IntegrationScheduler.new("/tmp") }
+  let(:scheduler) { Keizoku::Scheduler.new("/tmp") }
 
   def enqueue(quantity = 1, request = integration_request, clock = ->() { DateTime.now })
     quantity.times { queuer.enqueue(request, clock) }
@@ -81,7 +81,7 @@ describe Keizoku::IntegrationScheduler do
       scheduler.complete_integration_request(request)
       scheduler.should have_integration_requests_for_dates DateTime.new(1994), DateTime.new(2004)
 
-      scheduler = Keizoku::IntegrationScheduler.new("/tmp")
+      scheduler = Keizoku::Scheduler.new("/tmp")
       scheduler.read_queue
       scheduler.should have_integration_requests_for_dates DateTime.new(1994), DateTime.new(2004)
     end
