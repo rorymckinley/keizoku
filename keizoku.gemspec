@@ -9,10 +9,10 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Rory McKinley"]
-  s.date = "2012-07-29"
+  s.date = "2012-07-30"
   s.description = "Simple CI using Git"
   s.email = "rorymckinley@gmail.com"
-  s.executables = ["keizoku-cronjob", "keizoku-post-receive-hook"]
+  s.executables = ["keizoku-cronjob", "keizoku-init", "keizoku-integrate", "keizoku-post-receive-hook", "keizoku-validate-rake-spec"]
   s.extra_rdoc_files = [
     "LICENSE.txt",
     "README.md",
@@ -30,10 +30,11 @@ Gem::Specification.new do |s|
     "Rakefile",
     "VERSION",
     "bin/keizoku-cronjob",
+    "bin/keizoku-init",
+    "bin/keizoku-integrate",
     "bin/keizoku-post-receive-hook",
+    "bin/keizoku-validate-rake-spec",
     "examples/keizoku-post-receive-hook.conf",
-    "helpers/keizoku-integrate",
-    "helpers/keizoku-validate-rake-spec",
     "keizoku.gemspec",
     "lib/keizoku.rb",
     "lib/keizoku/git_hook.rb",
@@ -49,13 +50,14 @@ Gem::Specification.new do |s|
     "spec/keizoku/integration_scheduler_spec.rb",
     "spec/keizoku/integration_spec.rb",
     "spec/spec_helper.rb",
+    "spec/support/fake-keizoku-integration",
     "spec/support/fake_integration.rb",
     "spec/support/fake_io.rb"
   ]
   s.homepage = "http://github.com/rorymckinley/keizoku"
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
-  s.rubygems_version = "1.8.19"
+  s.rubygems_version = "1.8.24"
   s.summary = "Simple CI using Git"
 
   if s.respond_to? :specification_version then

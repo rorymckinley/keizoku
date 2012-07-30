@@ -1,0 +1,19 @@
+#!/usr/bin/env ruby
+
+def run_or_die(command)
+  system(command) or exit(1)
+end
+
+if File.exists?('Gemfile')
+  run_or_die('bundle')
+  prefix="bundle exec "
+else
+  prefix=''
+end
+
+if !system("#{prefix}rake -T | grep -q '^rake spec'")
+  $stderr.puts "This validator needs a rake task called spec."
+  exit(1)
+end
+
+run_or_die("#{prefix}rake spec")
