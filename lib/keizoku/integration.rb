@@ -1,3 +1,5 @@
+require 'io/wait'
+
 module Keizoku
   class Integration
     attr_reader :request
@@ -14,9 +16,37 @@ module Keizoku
     private :initialize
 
     def integrate
-      @successful = system(environment, @integration_helper)
+      log_r, log_w = IO.pipe
+      exit_r, exit_w = IO.pipe
+      pid = fork do
+        log_r.close
+        exit_r.close
+        ENV.replace(environment)
+        log = `#{@integration_helper} 2>&1`
+        exit_w.puts $?.to_i
+        log_w.write log
+        exit_w.close
+        log_w.close
+      end
+      log_w.close
+      exit_w.close
+      @log = ''
+      while Process.wait(pid, Process::WNOHANG)
+        @successful = exit_r.gets.chomp == '0' if exit_r.ready?
+        @log += log_r.read if log_r.ready?
+        sleep 0.001
+      end
+      @successful = exit_r.gets.chomp == '0' unless exit_r.eof?
+      @log += log_r.read unless log_r.eof?
+      exit_r.close
+      log_r.close
+      #@successful = system(environment, @integration_helper)
       @completed = true
-      raise RuntimeError.new("Could not execute keizoku-integrate") if @successful.nil?
+      raise RuntimeError.new("Could not execute #{@integration_helper}") if @successful.nil?
+    end
+
+    def log
+      @log
     end
 
     def environment
@@ -41,7 +71,7 @@ module Keizoku
 
     def request_environment
       @request.inject({}) do |memo,(key,value)|
-        memo[key.to_s.upcase] = value
+        memo[key.to_s.upcase] = value.to_s
         memo
       end
     end

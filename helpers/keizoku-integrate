@@ -7,7 +7,7 @@
 # TAGGEREMAIL
 # COMMIT
 # TAG
-# REPO
+# REPO_URL
 # VALIDATOR
 
 base=$(mktemp -d -t keizoku-integrate.XXXXXXXXXX) || exit 1
@@ -20,7 +20,7 @@ cleanup() {
 }
 trap cleanup SIGHUP SIGINT SIGTERM
 
-git clone ${REPO} ${base}/work
+git clone ${REPO_URL} ${base}/work
 cd ${base}/work
 git checkout -t -b ${WORKBENCH} origin/${WORKBENCH}
 git for-each-ref --format='%(contents)' ${TAG} > ${message}

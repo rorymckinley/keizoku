@@ -71,6 +71,15 @@ describe Keizoku::Integration do
         i.should_not be_successful
       end
     end
+
+    it "makes a log of the integration attempt avaialble" do
+      helper = File.join(File.dirname(__FILE__), '..', 'support', 'fake-keizoku-integration')
+      @integration = Keizoku::Integration.build(request, "/bin/echo Wonderful success", helper)
+      thr = Thread.fork { @integration.integrate }
+      sleep 0.025
+      thr.join
+      @integration.log.should match(/Wonderful success/)
+    end
   end
 
   describe "#completed?" do
