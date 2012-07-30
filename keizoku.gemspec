@@ -44,16 +44,17 @@ Gem::Specification.new do |s|
     "lib/keizoku/queuer.rb",
     "lib/keizoku/scheduler.rb",
     "lib/keizoku/sub_process.rb",
+    "spec/keizoku/dispatcher_spec.rb",
     "spec/keizoku/git_hook_spec.rb",
     "spec/keizoku/git_repo_spec.rb",
-    "spec/keizoku/integration_dispatcher_spec.rb",
-    "spec/keizoku/integration_queuer_spec.rb",
-    "spec/keizoku/integration_scheduler_spec.rb",
     "spec/keizoku/integration_spec.rb",
+    "spec/keizoku/queuer_spec.rb",
+    "spec/keizoku/scheduler_spec.rb",
     "spec/spec_helper.rb",
     "spec/support/fake-keizoku-integration",
     "spec/support/fake_integration.rb",
-    "spec/support/fake_io.rb"
+    "spec/support/fake_io.rb",
+    "spec/support/tempus_fugit.rb"
   ]
   s.homepage = "http://github.com/rorymckinley/keizoku"
   s.licenses = ["MIT"]
